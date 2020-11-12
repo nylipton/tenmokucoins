@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'bloc/reddit_client_cubit.dart';
@@ -93,15 +92,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _getMainList(SubredditCubit subredditCubit) {
-    Widget w = BlocBuilder<SubredditCubit, List<UserContent>>(
+    Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
         cubit: subredditCubit,
-        builder: (_, List<UserContent> contentList) {
+        builder: (_, List<SubmissionItem> contentList) {
           return ListView.builder(
             itemCount: contentList.length,
             itemBuilder: (_, int index) {
               return ListTile(
                 leading: Icon(Icons.new_releases),
-                title: Text((contentList[index] as Submission).title),
+                title: Text(contentList[index].getTitle()),
               );
             },
           );

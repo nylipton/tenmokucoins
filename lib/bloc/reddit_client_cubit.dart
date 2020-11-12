@@ -128,13 +128,14 @@ class RedditWrapper extends Equatable {
 
     if( reddit != null ) {
       if( _pmsforsaleCubit == null ) {
+        String subredditName = 'pmsforsale' ;
         print( "creating pmsforsale cubit" ) ;
         SubredditRef pmsforsaleSR =
-        reddit.subreddit('pmsforsale');
+        reddit.subreddit(subredditName);
         Stream<UserContent> pmsforsaleContentStream =
         pmsforsaleSR.newest(limit: 20);
         _pmsforsaleCubit = SubredditCubit()
-          ..setStream(pmsforsaleContentStream);
+          ..setStream(subredditName, pmsforsaleContentStream);
       }
     } else {
       print( "Can't get pmsforsale cubit because the Reddit instance is null" ) ;
