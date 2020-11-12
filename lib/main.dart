@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tenmoku_coins/display/DateTimeFormatter.dart';
 
 import 'bloc/reddit_client_cubit.dart';
 import 'bloc/subreddit_cubit.dart';
@@ -37,7 +38,10 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+/// todo Move login from FAB into app bar and show login state
+/// todo Restyle list tile and move it into a separate class+file
 class _MyHomePageState extends State<MyHomePage> {
+
   @override
   void dispose() {
     RedditClientCubit redditCubit = BlocProvider.of(context);
@@ -63,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 w = Center(child: CircularProgressIndicator());
               else
                 w = Expanded(
-                    child: _getMainList(redditWrapper.getPmsforsaleCubit()));
+                    child: _getMainList(redditWrapper.getSubredditsCubit()));
 
               return w;
             }),
@@ -100,7 +104,9 @@ class _MyHomePageState extends State<MyHomePage> {
             itemBuilder: (_, int index) {
               return ListTile(
                 leading: Icon(Icons.new_releases),
-                title: Text(contentList[index].getTitle()),
+                title: Text("${contentList[index].getSubredditTitle()}: ${contentList[index].getTitle()}"),
+                subtitle: Text( DateTimeFormatter.format( contentList[index].getTimestamp( ) ) ),
+                dense: true,
               );
             },
           );
