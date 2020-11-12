@@ -56,20 +56,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Expanded(child: BlocBuilder<RedditClientCubit, RedditWrapper>(
+            BlocBuilder<RedditClientCubit, RedditWrapper>(
                 builder: (_, redditWrapper) {
               print('BlocBuilder called with $redditWrapper');
-              Widget w; //=Text('blah');
-              if (!redditWrapper.isAuthenticated())
-                w = Text('Start authentication to login');
-              else if (!redditWrapper.reddit.auth.isValid)
-                w = CircularProgressIndicator();
-              else {
-                print('BlocBuilder has an authenticated user');
-                return _getMainList(redditWrapper.getPmsforsaleCubit());
-              }
+              Widget w;
+              if (redditWrapper.reddit == null)
+                w = Center(child: CircularProgressIndicator());
+              else
+                w = Expanded(
+                    child: _getMainList(redditWrapper.getPmsforsaleCubit()));
+
               return w;
-            })),
+            }),
           ],
         ),
       ),
@@ -103,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
             itemBuilder: (_, int index) {
               return ListTile(
                 leading: Icon(Icons.new_releases),
-                title: Text(( contentList[index] as Submission).title),
+                title: Text((contentList[index] as Submission).title),
               );
             },
           );
