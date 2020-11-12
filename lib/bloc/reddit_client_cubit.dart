@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
+import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
@@ -93,6 +94,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
 
 /// a wrapper around the DRAW Reddit class which makes adds equatable functionality for the Cubit
 class RedditWrapper extends Equatable {
+  SubredditCubit _pmsforsaleCubit ;
   final Reddit _reddit;
   final int id; //used to force identification as new since Reddit doesn't
 
@@ -119,4 +121,24 @@ class RedditWrapper extends Equatable {
   bool get stringify => true;
 
   bool isAuthenticated( ) => !( reddit == null || reddit.readOnly ) ;
+
+  /// Once this Reddit is connected, you can get the /r/pmsforsale content
+  /// with this Cubit
+  SubredditCubit getPmsforsaleCubit( ) {
+
+    if( reddit != null ) {
+      if( _pmsforsaleCubit == null ) {
+        print( "creating pmsforsale cubit" ) ;
+        SubredditRef pmsforsaleSR =
+        reddit.subreddit('pmsforsale');
+        Stream<UserContent> pmsforsaleContentStream =
+        pmsforsaleSR.newest(limit: 20);
+        _pmsforsaleCubit = SubredditCubit()
+          ..setStream(pmsforsaleContentStream);
+      }
+    } else {
+      print( "Can't get pmsforsale cubit because the Reddit instance is null" ) ;
+    }
+    return _pmsforsaleCubit ;
+  }
 }

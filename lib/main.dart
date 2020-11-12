@@ -1,14 +1,9 @@
-import 'dart:async';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:draw/draw.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uni_links/uni_links.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'bloc/reddit_client_cubit.dart';
+import 'bloc/subreddit_cubit.dart';
 
 void main() async {
   runApp(MyApp());
@@ -44,7 +39,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   void dispose() {
     RedditClientCubit redditCubit = BlocProvider.of(context);
@@ -62,37 +56,17 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Center(child: BlocBuilder<RedditClientCubit, RedditWrapper>(
+            Expanded(child: BlocBuilder<RedditClientCubit, RedditWrapper>(
                 builder: (_, redditWrapper) {
               print('BlocBuilder called with $redditWrapper');
               Widget w; //=Text('blah');
-              if (redditWrapper.reddit == null)
+              if (!redditWrapper.isAuthenticated())
                 w = Text('Start authentication to login');
               else if (!redditWrapper.reddit.auth.isValid)
-                w = Text('Not authenticated yet');
+                w = CircularProgressIndicator();
               else {
                 print('BlocBuilder has an authenticated user');
-                w = FutureBuilder(
-                  future: redditWrapper.getUsername(),
-                  builder: (_, AsyncSnapshot<String> snapshot) {
-                    print(
-                        'FutureBuilder listening for the Redditor has returned...');
-                    if (snapshot.hasError) {
-                      print(
-                          'FutureBuilder got an error trying to get the Reddit user: $snapshot.error');
-                      return Text(
-                        'There was an error getting the user:\n$snapshot.error',
-                        softWrap: true,
-                      );
-                    } else if (snapshot.hasData) {
-                      print('...and it hasData');
-                      return Text('You are user: ${snapshot.data}');
-                    } else {
-                      print('...but the snapshot has no data');
-                      return Text('Waiting on the Reddit user...');
-                    }
-                  },
-                );
+                return _getMainList(redditWrapper.getPmsforsaleCubit());
               }
               return w;
             })),
@@ -101,16 +75,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
           builder: (_, redditWrapper) {
-            Widget w ;
+        Widget w;
         if (redditWrapper != null && redditWrapper.isAuthenticated())
-          w = Container( );
+          w = Container();
         else
           w = FloatingActionButton(
             onPressed: () => _authenticate(context),
             tooltip: 'Authenticate to Reddit',
             child: Icon(Icons.login),
           );
-        return w ;
+        return w;
       }), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
@@ -118,5 +92,22 @@ class _MyHomePageState extends State<MyHomePage> {
   void _authenticate(BuildContext context) {
     RedditClientCubit redditCubit = BlocProvider.of(context);
     redditCubit.authenticate();
+  }
+
+  Widget _getMainList(SubredditCubit subredditCubit) {
+    Widget w = BlocBuilder<SubredditCubit, List<UserContent>>(
+        cubit: subredditCubit,
+        builder: (_, List<UserContent> contentList) {
+          return ListView.builder(
+            itemCount: contentList.length,
+            itemBuilder: (_, int index) {
+              return ListTile(
+                leading: Icon(Icons.new_releases),
+                title: Text(( contentList[index] as Submission).title),
+              );
+            },
+          );
+        });
+    return w;
   }
 }
