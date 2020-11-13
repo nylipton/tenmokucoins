@@ -1,3 +1,4 @@
+import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tenmoku_coins/display/DateTimeFormatter.dart';
@@ -41,7 +42,6 @@ class MyHomePage extends StatefulWidget {
 /// todo Move login from FAB into app bar and show login state
 /// todo Restyle list tile and move it into a separate class+file
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   void dispose() {
     RedditClientCubit redditCubit = BlocProvider.of(context);
@@ -102,10 +102,34 @@ class _MyHomePageState extends State<MyHomePage> {
           return ListView.builder(
             itemCount: contentList.length,
             itemBuilder: (_, int index) {
+              Widget leading, title, subtitle;
+              Submission s = contentList[index].submission;
+              // print( '$index : ${s.selftext}' ) ;
+              // if( s.isSelf ?? false )
+              //   leading = Icon(Icons.new_releases) ;
+              // else if( RegExp(r"\.(gif|jpe?g|bmp|png)$").hasMatch(s.url.toString()) && s.thumbnail != null )
+              //   leading = Image.network( s.thumbnail.toString( ), fit: BoxFit.cover, ) ;
+              // else if (["v.redd.it", "i.redd.it", "i.imgur.com"].contains(s.domain) ||
+              //     s.url.toString().contains('.gifv'))
+              //   leading = Image.network( s.url.toString( ), fit: BoxFit.cover, ) ;
+
+              String avatar = contentList[index]
+                  .getPostTypes( )
+                  .map((postType) => (postType == PostType.BUY
+                      ? 'B'
+                      : (postType == PostType.SELL ? 'S' : 'T')))
+                  .reduce((value, element) => value+element) ;
+              Color avatarColor = Colors.blue ;
+              if( avatar == 'B' ) avatarColor = Colors.redAccent ;
+              else if( avatar == 'S' ) avatarColor = Colors.lightGreen ;
+              else if( avatar == 'T' ) avatarColor = Colors.yellow ;
+              leading = CircleAvatar(child: Text(avatar), backgroundColor: avatarColor,);
               return ListTile(
-                leading: Icon(Icons.new_releases),
-                title: Text("${contentList[index].getSubredditTitle()}: ${contentList[index].getTitle()}"),
-                subtitle: Text( DateTimeFormatter.format( contentList[index].getTimestamp( ) ) ),
+                leading: leading,
+                title: Text(
+                    "${contentList[index].getTitle()}"),
+                subtitle: Text('${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(
+                    contentList[index].getTimestamp())}'),
                 dense: true,
               );
             },

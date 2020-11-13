@@ -31,26 +31,32 @@ class SubredditCubit extends Cubit<List<SubmissionItem>> {
 /// a reddit submission (i.e. the post)
 class SubmissionItem extends Equatable {
   final Set<PostType> _postTypes;
-  final Submission _submission;
+  final Submission submission;
 
-  SubmissionItem(this._submission)
-      : _postTypes = parsePostTypes(_submission.title.substring(0, 10));
+  SubmissionItem(this.submission)
+      : _postTypes = parsePostTypes(submission.title.substring(0, 10));
 
   /// post's title
-  String getTitle() => _submission.title;
+  String getTitle() => submission.title;
 
   /// ex: coins4sale or pmsforsale
-  String getSubredditTitle() => _submission.subreddit.displayName;
+  String getSubredditTitle() => submission.subreddit.displayName;
 
   /// when it was approved
-  DateTime getTimestamp( ) => _submission.createdUtc.toLocal() ;
+  DateTime getTimestamp( ) => submission.createdUtc.toLocal() ;
+
+  Uri getThumbnail( ) {
+    Uri uri = submission.thumbnail ;
+    print( 'thumbnail uri:${submission.thumbnail}' );
+    return uri.toString().isEmpty ? null : uri ;
+  }
 
   Set<PostType> getPostTypes( ) => _postTypes ;
 
   @override
   // TODO: implement props
   List<Object> get props =>
-      [_submission.subreddit.displayName, _submission.title, _submission.id];
+      [submission.subreddit.displayName, submission.title, submission.id];
 
   @override
   bool get stringify => true;
