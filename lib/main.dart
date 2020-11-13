@@ -2,6 +2,7 @@ import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tenmoku_coins/display/DateTimeFormatter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'bloc/reddit_client_cubit.dart';
 import 'bloc/subreddit_cubit.dart';
@@ -99,42 +100,61 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
         cubit: subredditCubit,
         builder: (_, List<SubmissionItem> contentList) {
-          return ListView.builder(
-            itemCount: contentList.length,
-            itemBuilder: (_, int index) {
-              Widget leading, title, subtitle;
-              Submission s = contentList[index].submission;
-              // print( '$index : ${s.selftext}' ) ;
-              // if( s.isSelf ?? false )
-              //   leading = Icon(Icons.new_releases) ;
-              // else if( RegExp(r"\.(gif|jpe?g|bmp|png)$").hasMatch(s.url.toString()) && s.thumbnail != null )
-              //   leading = Image.network( s.thumbnail.toString( ), fit: BoxFit.cover, ) ;
-              // else if (["v.redd.it", "i.redd.it", "i.imgur.com"].contains(s.domain) ||
-              //     s.url.toString().contains('.gifv'))
-              //   leading = Image.network( s.url.toString( ), fit: BoxFit.cover, ) ;
+          return ListView.separated(
+              separatorBuilder: (_, __) => Divider(),
+              itemCount: contentList.length,
+              itemBuilder: (_, int index) {
+                Widget leading, title, subtitle;
+                Submission s = contentList[index].submission;
+                // print( '$index : ${s.selftext}' ) ;
+                // if( s.isSelf ?? false )
+                //   leading = Icon(Icons.new_releases) ;
+                // else if( RegExp(r"\.(gif|jpe?g|bmp|png)$").hasMatch(s.url.toString()) && s.thumbnail != null )
+                //   leading = Image.network( s.thumbnail.toString( ), fit: BoxFit.cover, ) ;
+                // else if (["v.redd.it", "i.redd.it", "i.imgur.com"].contains(s.domain) ||
+                //     s.url.toString().contains('.gifv'))
+                //   leading = Image.network( s.url.toString( ), fit: BoxFit.cover, ) ;
 
-              String avatar = contentList[index]
-                  .getPostTypes( )
-                  .map((postType) => (postType == PostType.BUY
-                      ? 'B'
-                      : (postType == PostType.SELL ? 'S' : 'T')))
-                  .reduce((value, element) => value+element) ;
-              Color avatarColor = Colors.blue ;
-              if( avatar == 'B' ) avatarColor = Colors.redAccent ;
-              else if( avatar == 'S' ) avatarColor = Colors.lightGreen ;
-              else if( avatar == 'T' ) avatarColor = Colors.yellow ;
-              leading = CircleAvatar(child: Text(avatar), backgroundColor: avatarColor,);
-              return ListTile(
-                leading: leading,
-                title: Text(
-                    "${contentList[index].getTitle()}"),
-                subtitle: Text('${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(
-                    contentList[index].getTimestamp())}'),
-                dense: true,
-              );
-            },
-          );
+                Set<PostType> postTypes = contentList[index]
+                    .getPostTypes() ;
+                String avatar = postTypes
+                    .map((p) => p.toShortString())
+                    .reduce((value, element) => value + element??"");
+                Color avatarBackgroundColor = Colors.grey;
+                Color avatarForegroundColor = Colors.white ;
+                if (postTypes.contains(PostType.BUY)) {
+                  avatarBackgroundColor = Colors.blueGrey;
+                } else if (postTypes.contains(PostType.SELL)) {
+                  avatarBackgroundColor = Colors.lightGreen;
+                }
+
+                // if (postTypes.length > 1 ) {
+                //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;
+                //   avatarBackgroundColor = hsl.withLightness( hsl.lightness + .2 ).toColor() ;
+                // }
+                leading = CircleAvatar(
+                  child: Text(avatar, style: TextStyle( color: avatarForegroundColor) ),
+                  backgroundColor: avatarBackgroundColor,
+                );
+                return ListTile(
+                  leading: leading,
+                  title: Text("${contentList[index].getTitle()}"),
+                  subtitle: Text(
+                      '${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}'),
+                  dense: true,
+                  trailing: InkWell(
+                      onTap: () => _launch(s.url),
+                      child: Icon(
+                        Icons.keyboard_arrow_right,
+                      )),
+                );
+              });
         });
     return w;
+  }
+
+  _launch(Uri shortlink) {
+    print(shortlink);
+    launch(shortlink.toString());
   }
 }

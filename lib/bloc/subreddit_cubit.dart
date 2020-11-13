@@ -34,7 +34,7 @@ class SubmissionItem extends Equatable {
   final Submission submission;
 
   SubmissionItem(this.submission)
-      : _postTypes = parsePostTypes(submission.title.substring(0, 10));
+      : _postTypes = parsePostTypes(submission.title.substring(0, 15));
 
   /// post's title
   String getTitle() => submission.title;
@@ -72,3 +72,16 @@ class SubmissionItem extends Equatable {
 
 /// Is this a post to sell, buy or trade? Note that a post might refer to multiple
 enum PostType { SELL, BUY, TRADE }
+
+extension PostString on PostType {
+  String toShortString() {
+    String shortString ;
+    if( this == PostType.SELL )
+      shortString = 'S' ;
+    else if( this == PostType.BUY )
+      shortString = 'B' ;
+    else
+      shortString = 'T' ;
+    return shortString ;
+  }
+}
