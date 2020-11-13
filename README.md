@@ -1,16 +1,26 @@
-# tenmoku_coins
+# Tenmoku Coins
 
-An app for coin collectors
+An app for coin collectors. This will connect to Reddit and other forums where coins are
+bought and sold.
 
-## Getting Started
+## Todo list before 1.0 launch
+- Include infinite scrolling
+- Add filters
+- Update styling
+- Update IA and navigation (filters, forum login)
+- Reauthenticate automatically to Reddit
+- Save settings (firebase? local keystore?)
+- Include spot price check for PMs
+- Include lookups for coin comps
+- Include communications back to original poster; include direction to login to non-authenticated users when necessary
+- Search
+- Include a second forum (ex: cointalk)
 
-This project is a starting point for a Flutter application.
+## Post launch roadmap
+- Configure CI
+- Add notifications and constant monitoring
+- Ensure accessibility
+- Variable themes
+- Configure CD
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Done
