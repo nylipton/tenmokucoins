@@ -62,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             BlocBuilder<RedditClientCubit, RedditWrapper>(
                 builder: (_, redditWrapper) {
-              print('BlocBuilder called with $redditWrapper');
+              // print('BlocBuilder called with $redditWrapper');
               Widget w;
               if (redditWrapper.reddit == null)
                 w = Center(child: CircularProgressIndicator());
@@ -96,63 +96,79 @@ class _MyHomePageState extends State<MyHomePage> {
     redditCubit.authenticate();
   }
 
+  /// the main body of this page; this is the list that loads submissions (i.e
+  /// posts or articles)
   Widget _getMainList(SubredditCubit subredditCubit) {
-    Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
+    final Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
         cubit: subredditCubit,
         builder: (_, List<SubmissionItem> contentList) {
+          print( 'blocbuilder called again' ) ;
           return ListView.separated(
               separatorBuilder: (_, __) => Divider(),
               itemCount: contentList.length,
               itemBuilder: (_, int index) {
-                Widget leading, title, subtitle;
-                Submission s = contentList[index].submission;
-                // print( '$index : ${s.selftext}' ) ;
-                // if( s.isSelf ?? false )
-                //   leading = Icon(Icons.new_releases) ;
-                // else if( RegExp(r"\.(gif|jpe?g|bmp|png)$").hasMatch(s.url.toString()) && s.thumbnail != null )
-                //   leading = Image.network( s.thumbnail.toString( ), fit: BoxFit.cover, ) ;
-                // else if (["v.redd.it", "i.redd.it", "i.imgur.com"].contains(s.domain) ||
-                //     s.url.toString().contains('.gifv'))
-                //   leading = Image.network( s.url.toString( ), fit: BoxFit.cover, ) ;
-
-                Set<PostType> postTypes = contentList[index]
-                    .getPostTypes() ;
-                String avatar = postTypes
-                    .map((p) => p.toShortString())
-                    .reduce((value, element) => value + element??"");
-                Color avatarBackgroundColor = Colors.grey;
-                Color avatarForegroundColor = Colors.white ;
-                if (postTypes.contains(PostType.BUY)) {
-                  avatarBackgroundColor = Colors.blueGrey;
-                } else if (postTypes.contains(PostType.SELL)) {
-                  avatarBackgroundColor = Colors.lightGreen;
-                }
-
-                // if (postTypes.length > 1 ) {
-                //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;
-                //   avatarBackgroundColor = hsl.withLightness( hsl.lightness + .2 ).toColor() ;
-                // }
-                leading = CircleAvatar(
-                  child: Text(avatar, style: TextStyle( color: avatarForegroundColor) ),
-                  backgroundColor: avatarBackgroundColor,
-                );
-                return ListTile(
-                  leading: leading,
-                  title: Text("${contentList[index].getTitle()}"),
-                  subtitle: Text(
-                      '${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}'),
-                  dense: true,
-                  trailing: InkWell(
-                      onTap: () => _launch(s.url),
-                      child: Icon(
-                        Icons.keyboard_arrow_right,
-                      )),
-                );
+                return createListTile(subredditCubit, contentList, index);
               });
         });
+    return RefreshIndicator(
+        onRefresh: () => Future<void>.delayed(Duration(seconds: 2), () => subredditCubit.clear()),
+        child: w);
+  }
+
+  /// this is the main list tile that will go in the list
+  Widget createListTile(SubredditCubit subredditCubit,
+      List<SubmissionItem> contentList, int index) {
+    Widget w, leading, trailing;
+    String title, subtitle;
+
+    if (contentList.length == 0) {
+      leading = CircularProgressIndicator();
+      title = 'Loading...';
+      subtitle = '';
+    } else {
+      Submission s = contentList[index].submission;
+      title = '${contentList[index].getTitle()}';
+      subtitle =
+          '${index}: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
+      Set<PostType> postTypes = contentList[index].getPostTypes();
+      String avatar = (postTypes.length == 0)
+          ? "?"
+          : postTypes
+              .map((p) => p.toShortString())
+              .reduce((value, element) => value + element);
+      Color avatarBackgroundColor = Colors.grey;
+      Color avatarForegroundColor = Colors.white;
+      if (postTypes.contains(PostType.BUY)) {
+        avatarBackgroundColor = Colors.blueGrey;
+      } else if (postTypes.contains(PostType.SELL)) {
+        avatarBackgroundColor = Colors.lightGreen;
+      }
+      // if (postTypes.length > 1 ) {
+      //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;
+      //   avatarBackgroundColor = hsl.withLightness( hsl.lightness + .2 ).toColor() ;
+      // }
+      leading = CircleAvatar(
+        child: Text(avatar, style: TextStyle(color: avatarForegroundColor)),
+        backgroundColor: avatarBackgroundColor,
+      );
+      trailing = InkWell(
+          onTap: () => _launch(s.url),
+          child: Icon(
+            Icons.keyboard_arrow_right,
+          ));
+    }
+
+    w = ListTile(
+        leading: leading,
+        title: Text(title),
+        subtitle: Text(subtitle),
+        dense: true,
+        trailing: trailing);
+
     return w;
   }
 
+  /// used to launch the browser
   _launch(Uri shortlink) {
     print(shortlink);
     launch(shortlink.toString());
