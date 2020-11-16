@@ -99,10 +99,9 @@ class _MyHomePageState extends State<MyHomePage> {
   /// the main body of this page; this is the list that loads submissions (i.e
   /// posts or articles)
   Widget _getMainList(SubredditCubit subredditCubit) {
-    final Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
+    Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
         cubit: subredditCubit,
         builder: (_, List<SubmissionItem> contentList) {
-          print( 'blocbuilder called again' ) ;
           return ListView.separated(
               separatorBuilder: (_, __) => Divider(),
               itemCount: contentList.length,
@@ -110,9 +109,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 return createListTile(subredditCubit, contentList, index);
               });
         });
-    return RefreshIndicator(
-        onRefresh: () => Future<void>.delayed(Duration(seconds: 2), () => subredditCubit.clear()),
+    w = RefreshIndicator(
+        onRefresh: () => Future<void>( () => subredditCubit.clear()),
         child: w);
+    w = NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo ) {
+        if( scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent )
+          subredditCubit.loadMore() ;
+        return true ;
+      },
+      child: w
+    ) ;
+    return w ;
   }
 
   /// this is the main list tile that will go in the list

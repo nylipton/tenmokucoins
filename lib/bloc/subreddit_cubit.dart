@@ -7,7 +7,6 @@ class SubredditCubit extends Cubit<List<SubmissionItem>> {
   /// the number of submissions to load at a time
   static const int defaultLoadingNum = 20;
   static const subredditName = 'pmsforsale+coins4sale';
-
   final Reddit _reddit;
 
   /// the ID of the last received submission; used so we can ask for more
@@ -22,7 +21,7 @@ class SubredditCubit extends Cubit<List<SubmissionItem>> {
 
   @override
   void onChange(Change<List> change) {
-    print('next state=${change.nextState}');
+    print('next state has ${change.nextState.length} items');
     super.onChange(change);
   }
 
@@ -35,7 +34,7 @@ class SubredditCubit extends Cubit<List<SubmissionItem>> {
   /// listen function for Reddit content
   void _process(UserContent event) {
     SubmissionItem submissionItem = SubmissionItem(event);
-    print('Got new subreddit content: $submissionItem');
+    // print('Got new subreddit content: $submissionItem');
     _lastId = submissionItem.getId();
 
     /// todo, this only works if it comes in chronologically
