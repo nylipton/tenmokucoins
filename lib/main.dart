@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 
 import 'bloc/reddit_client_cubit.dart';
 import 'bloc/subreddit_cubit.dart';
@@ -10,7 +11,9 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp();
+  MyApp() {
+    Logger.level = Level.debug ;
+  }
 
   // This widget is the root of your application.
   @override

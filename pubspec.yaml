@@ -45,6 +45,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.0
 
+  # attractive logging
+  logger: ^0.9.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

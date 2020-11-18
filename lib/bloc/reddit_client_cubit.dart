@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +18,7 @@ import 'package:equatable/equatable.dart';
 /// TODO implement restoring authentication
 /// TODO turn this into a Bloc with states like new, untrusted, authenticated
 class RedditClientCubit extends Cubit<RedditWrapper> {
+  final logger = Logger();
   RedditWrapper _redditWrapper;
   String userAgentId = 'tenmokucoins';
 
@@ -27,10 +29,10 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
     // First, set up a listener for deep link updates. This is necessary for
     // being notified when the authenticator has been updated.
     _sub = getUriLinksStream().listen((uri) async {
-      print("Got an updated response: $uri");
+      logger.d("Got an updated response: $uri");
       if (uri != null && uri.queryParameters["code"] != null) {
         String authCode = uri.queryParameters["code"];
-        print('Got authorization code $authCode');
+        logger.d('Got authorization code $authCode');
         await closeWebView();
         // if (_redditWrapper != null && !_redditWrapper.reddit.auth.isValid) {
         await state.reddit.auth.authorize(authCode);
@@ -38,19 +40,19 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
             state.reddit)); // Create a new RedditWrapper to force state update
         // }
       } else {
-        print('Got no initial link back from the authorization Uri');
+        logger.i('Got no initial link back from the authorization Uri');
       }
     });
 
     // Second, set the wrapper to hold an anonymous Reddit instance
     if (state == null || state.reddit == null) {
-      print('Initializing Reddit instance with anonymous client');
+      logger.d('Initializing Reddit instance with anonymous client');
       Reddit.createUntrustedReadOnlyInstance(
         clientId: REDDIT_CLIENT_ID,
         userAgent: userAgentId,
         deviceId: Uuid().v4(),
       ).then((r) {
-        print('Setting the reddit wrapper to an untrusted user');
+        logger.d('Setting the reddit wrapper to an untrusted user');
         emit(RedditWrapper(r));
       });
     }
@@ -63,7 +65,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
   /// Launches the browser, which allows the user to login.
   void authenticate() async {
     try {
-      print('Starting to authenticate...');
+      logger.d('Starting to authenticate...');
       Reddit reddit = Reddit.createInstalledFlowInstance(
           redirectUri: Uri.parse("tenmokucoins://tenmoku.com"),
           clientId: REDDIT_CLIENT_ID,
@@ -72,19 +74,18 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
       final authUrl = reddit.auth.url(
           ['read', 'account', 'identity'], 'tenmokucoins-auth',
           compactLogin: true);
-      print("authentication URL is $authUrl");
+      logger.d("authentication URL is $authUrl");
       emit(RedditWrapper(reddit));
       if (await canLaunch(authUrl.toString())) {
-        print("launching authorization page");
+        logger.d("launching authorization page");
         launch(authUrl.toString());
       } else {
-        print('Not able to launch browser to authenticate');
+        logger.w('Not able to launch browser to authenticate');
         addError('Not able to launch browser to authenticate');
       }
     } catch (e, stacktrace) {
       addError(e);
-      print(e);
-      print(stacktrace);
+      logger.e(e, stacktrace);
     }
   }
 

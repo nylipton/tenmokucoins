@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:draw/draw.dart';
 import 'package:equatable/equatable.dart';
+import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 
 /// This represents a Subreddit's list of submissions (i.e. posts)
 class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
+  final logger = Logger();
+
   /// The names of the subreddits to load
   static const subredditName = 'pmsforsale+coins4sale';
 
@@ -32,18 +35,18 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
   /// [Reddit] instance it won't ask for submissions.
   // TODO validate that this is getting callbacks from the [RedditClientCubit]
   void setRedditClientCubit(RedditClientCubit clientCubit) {
-    print('SubredditBloc is listening to the RedditClientCubit');
+    logger.v('SubredditBloc is listening to the RedditClientCubit');
     if (clientCubit.state != null && clientCubit.state.reddit != null) {
-      print('SubredditBloc is setting the Reddit instance');
+      logger.d('SubredditBloc is setting the Reddit instance');
       _reddit = clientCubit.state.reddit;
       add(SubredditListClearEvent());
     }
     _redditCubitStreamSubscription = clientCubit.listen((redditWrapper) {
-      print(
+      logger.d(
           'SubredditBloc has been notified of an update by RedditClientCubit');
       if (redditWrapper == null) {
         // if the redditWrapper is now null then clear everything
-        print(
+        logger.v(
           'reddit instance is now null',
         );
         _reddit = null;
@@ -51,7 +54,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
       } else {
         // if there is now a redditwrapper then save it and load up the list
         // not sure if we care whether the user is authenticated
-        print('The reddit instance has been updated and is now set');
+        logger.d('The reddit instance has been updated and is now set');
         _reddit = redditWrapper.reddit;
         add(SubredditListClearEvent());
       }
@@ -60,7 +63,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
 
   @override
   Stream<SubredditListState> mapEventToState(SubredditListEvent event) async* {
-    // print('SubredditBloc received an event: $event while in state: $state');
+    logger.v('SubredditBloc received an event: $event while in state: $state');
     if (event is SubredditListLoadSubmissions) {
       yield* _mapLoadSubmissions(event);
     } else if (event is SubredditListClearEvent) {
@@ -68,20 +71,20 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
     } else if (event is SubredditListNewSubmissionReceived) {
       yield await _mapSubmissionReceived(event);
     } else {
-      print('SubredditBloc got unknown event $event');
+      logger.w('SubredditBloc got unknown event $event');
     }
   }
 
   Future<SubredditListState> _mapSubmissionReceived(
       SubredditListNewSubmissionReceived event) async {
-    // print('Got new subreddit content: ${event.item}');
+    logger.v('Got new subreddit content: ${event.item}');
     String lastId = event.item.getId();
 
     if (state.submissions != null && state.submissions.contains(event.item)) {
-      print('Received and ignoring a duplicate submission');
+      logger.i('Received and ignoring a duplicate submission');
       return state;
     } else if (state is SubredditRawState) {
-      print('Received (and ignoring) a submission from reddit while in raw state: ${event.item}');
+      logger.i('Received (and ignoring) a submission from reddit while in raw state: ${event.item}');
       return state;
     } else {
       var list = state.submissions;
@@ -123,12 +126,12 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
     SubredditRef subredditRef = _reddit.subreddit(subredditName);
     if (state.lastId == null) {
       _numSubmissionsGoal = num;
-      print('SubredditBloc is requesting $num new submissions.');
+      logger.d('SubredditBloc is requesting $num new submissions.');
       subredditRef.newest(limit: num).listen(_process);
     } else {
       _numSubmissionsGoal += num;
       String after = 't3_'+state.lastId ;
-      print(
+      logger.d(
           'SubredditBloc is requesting $num new submissions after $after');
       subredditRef.newest(limit: num, after: after).listen(_process);
     }
@@ -149,6 +152,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
 
 /// a reddit submission (i.e. the post)
 class SubmissionItem extends Equatable {
+  final logger = Logger();
   final Set<PostType> _postTypes;
   final Submission submission;
 
@@ -166,7 +170,7 @@ class SubmissionItem extends Equatable {
 
   Uri getThumbnail() {
     Uri uri = submission.thumbnail;
-    print('thumbnail uri:${submission.thumbnail}');
+    logger.d('thumbnail uri:${submission.thumbnail}');
     return uri.toString().isEmpty ? null : uri;
   }
 

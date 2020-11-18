@@ -2,6 +2,7 @@
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,7 +22,9 @@ class ListingsPage extends StatefulWidget {
 /// TODO Move login from FAB into app bar and show login state
 /// TODO Restyle list tile and move it into a separate class+file
 class _ListingsPageState extends State<ListingsPage> {
+  /// if this is currently loading new data
   bool _isLoading ;
+  var logger = Logger();
 
   /// When the user views the item [_nextPageThreshhold] away from the bottom,
   /// more items are requested from the server
@@ -59,7 +62,7 @@ class _ListingsPageState extends State<ListingsPage> {
                 children: <Widget>[
                   BlocBuilder<RedditClientCubit, RedditWrapper>(
                       builder: (context, redditWrapper) {
-                        print('BlocBuilder called with $redditWrapper');
+                        logger.v('BlocBuilder called with $redditWrapper');
                         Widget w;
                         if (redditWrapper == null || redditWrapper.reddit == null)
                           w = Center(child: CircularProgressIndicator());
@@ -169,7 +172,7 @@ class _ListingsPageState extends State<ListingsPage> {
 
   /// used to launch the browser
   _launch(Uri shortlink) {
-    print(shortlink);
+    logger.d(shortlink);
     launch(shortlink.toString());
   }
 }

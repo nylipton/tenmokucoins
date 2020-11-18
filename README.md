@@ -24,3 +24,4 @@ bought and sold.
 ## Done
 - Include infinite scrolling
 - Update styling
+- Added real logging
