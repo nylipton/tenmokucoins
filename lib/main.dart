@@ -52,6 +52,22 @@ class MyHomePage extends StatefulWidget {
 /// TODO Move login from FAB into app bar and show login state
 /// TODO Restyle list tile and move it into a separate class+file
 class _MyHomePageState extends State<MyHomePage> {
+  bool _isLoading ;
+
+  /// When the user views the item [_nextPageThreshhold] away from the bottom,
+  /// more items are requested from the server
+  static const int _nextPageThreshold = 5 ;
+
+  @override
+  void initState() {
+    _isLoading = false ;
+    BlocProvider.of<SubredditBloc>( context ).listen( ( state ) {
+      setState(() {
+        _isLoading = ( state is SubredditListLoadingState ) ;
+      });
+    } ) ;
+  }
+
   @override
   void dispose() {
     RedditClientCubit redditCubit = BlocProvider.of(context);
@@ -90,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
             w = FloatingActionButton(
               onPressed: () => _authenticate(context),
               tooltip: 'Authenticate to Reddit',
-              child: Icon(Icons.login),
+              child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
             );
           return w;
         }));
@@ -108,24 +124,21 @@ class _MyHomePageState extends State<MyHomePage> {
         builder: (_, SubredditListState state) {
       return ListView.separated(
           separatorBuilder: (_, __) => Divider(),
-          itemCount: state.submissions.length,
+          itemCount: state.submissions.length + (_isLoading?1:0),
           itemBuilder: (_, int index) {
+            if( state.submissions.length - 5 == index )
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListLoadSubmissions(numberToLoad: 10));
             return createListTile(state.submissions, index);
           });
     });
+    // RefreshIndicator is so the list will clear and refresh when pulled down
     w = RefreshIndicator(
         onRefresh: () => Future<void>(() =>
             BlocProvider.of<SubredditBloc>(context)
                 .add(SubredditListClearEvent())),
         child: w);
-    w = NotificationListener<ScrollNotification>(
-        onNotification: (ScrollNotification scrollInfo) {
-          if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent)
-            BlocProvider.of<SubredditBloc>(context)
-                .add(SubredditListLoadSubmissions(numberToLoad: 10));
-          return true;
-        },
-        child: w);
+
     return w;
   }
 
@@ -134,10 +147,12 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget w, leading, trailing;
     String title, subtitle;
 
-    if (contentList.length == 0) {
-      leading = CircularProgressIndicator();
-      title = 'Loading...';
-      subtitle = '';
+    if (contentList.length == 0 || index == contentList.length) {
+      return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: CircularProgressIndicator(),
+          ));
     } else {
       Submission s = contentList[index].submission;
       title = '${contentList[index].getTitle()}';

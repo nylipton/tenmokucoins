@@ -61,7 +61,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
 
   @override
   Stream<SubredditListState> mapEventToState(SubredditListEvent event) async* {
-    print('SubredditBloc received an event: $event while in state: $state');
+    // print('SubredditBloc received an event: $event while in state: $state');
     if (event is SubredditListLoadSubmissions) {
       yield* _mapLoadSubmissions(event);
     } else if (event is SubredditListClearEvent) {
@@ -75,14 +75,14 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
 
   Future<SubredditListState> _mapSubmissionReceived(
       SubredditListNewSubmissionReceived event) async {
-    print('Got new subreddit content: ${event.item}');
+    // print('Got new subreddit content: ${event.item}');
     String lastId = event.item.getId();
 
     if (state.submissions != null && state.submissions.contains(event.item)) {
-      print('Received duplicate submission!');
+      print('Received and ignoring a duplicate submission');
       return state;
     } else if (state is SubredditRawState) {
-      print('Received post from reddit while in raw state: ${event.item}');
+      print('Received (and ignoring) a submission from reddit while in raw state: ${event.item}');
       return state;
     } else {
       var list = state.submissions;
