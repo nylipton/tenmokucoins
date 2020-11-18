@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'DateTimeFormatter.dart';
 
+/// Shows a list of postings from Reddit.
 class ListingsPage extends StatefulWidget {
   ListingsPage({Key key, this.title}) : super(key: key);
 
@@ -48,6 +49,7 @@ class _ListingsPageState extends State<ListingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          elevation: 1.0,
           title: Text(widget.title),
         ),
         body: Center(
@@ -133,12 +135,12 @@ class _ListingsPageState extends State<ListingsPage> {
           : postTypes
           .map((p) => p.toShortString())
           .reduce((value, element) => value + element);
-      Color avatarBackgroundColor = Colors.grey;
-      Color avatarForegroundColor = Colors.white;
+      Color avatarBackgroundColor = Theme.of(context).colorScheme.primary;//Colors.grey;
+      Color avatarForegroundColor = Theme.of(context).colorScheme.onPrimary;//Colors.white;
       if (postTypes.contains(PostType.BUY)) {
-        avatarBackgroundColor = Colors.blueGrey;
+        avatarBackgroundColor = Color(0xA0F2CC8F);//Colors.blueGrey;
       } else if (postTypes.contains(PostType.SELL)) {
-        avatarBackgroundColor = Colors.lightGreen;
+        avatarBackgroundColor = Color(0xFFF2CC8F);//Colors.lightGreen;
       }
       // if (postTypes.length > 1 ) {
       //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;
