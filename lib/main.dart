@@ -22,9 +22,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
       ),
-      home: BlocProvider(
-        lazy: false,
-        create: (_) => RedditClientCubit(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<RedditClientCubit>(
+            create: (context) => RedditClientCubit(),
+          ),
+          BlocProvider<SubredditBloc>(create: (context) {
+            var bloc = SubredditBloc();
+            bloc.setRedditClientCubit(
+                BlocProvider.of<RedditClientCubit>(context));
+            return bloc;
+          }),
+        ],
         child: MyHomePage(title: 'Tenmoku Coins'),
       ),
     );
@@ -40,8 +49,8 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-/// todo Move login from FAB into app bar and show login state
-/// todo Restyle list tile and move it into a separate class+file
+/// TODO Move login from FAB into app bar and show login state
+/// TODO Restyle list tile and move it into a separate class+file
 class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
@@ -53,42 +62,38 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            BlocBuilder<RedditClientCubit, RedditWrapper>(
-                builder: (_, redditWrapper) {
-              // print('BlocBuilder called with $redditWrapper');
-              Widget w;
-              if (redditWrapper.reddit == null)
-                w = Center(child: CircularProgressIndicator());
-              else
-                w = Expanded(
-                    child: _getMainList(redditWrapper.getSubredditsCubit()));
-
-              return w;
-            }),
-          ],
+        appBar: AppBar(
+          title: Text(widget.title),
         ),
-      ),
-      floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
-          builder: (_, redditWrapper) {
-        Widget w;
-        if (redditWrapper != null && redditWrapper.isAuthenticated())
-          w = Container();
-        else
-          w = FloatingActionButton(
-            onPressed: () => _authenticate(context),
-            tooltip: 'Authenticate to Reddit',
-            child: Icon(Icons.login),
-          );
-        return w;
-      }), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+        body: Center(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+              BlocBuilder<RedditClientCubit, RedditWrapper>(
+                  builder: (context, redditWrapper) {
+                print('BlocBuilder called with $redditWrapper');
+                Widget w;
+                if (redditWrapper == null || redditWrapper.reddit == null)
+                  w = Center(child: CircularProgressIndicator());
+                else
+                  w = Expanded(child: _getMainList(context));
+                return w;
+              }),
+            ])),
+        floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
+            builder: (_, redditWrapper) {
+          Widget w;
+          if (redditWrapper != null && redditWrapper.isAuthenticated())
+            w = Container();
+          else
+            w = FloatingActionButton(
+              onPressed: () => _authenticate(context),
+              tooltip: 'Authenticate to Reddit',
+              child: Icon(Icons.login),
+            );
+          return w;
+        }));
   }
 
   void _authenticate(BuildContext context) {
@@ -96,36 +101,36 @@ class _MyHomePageState extends State<MyHomePage> {
     redditCubit.authenticate();
   }
 
-  /// the main body of this page; this is the list that loads submissions (i.e
+  /// The main body of this page; this is the list that loads submissions (i.e
   /// posts or articles)
-  Widget _getMainList(SubredditCubit subredditCubit) {
-    Widget w = BlocBuilder<SubredditCubit, List<SubmissionItem>>(
-        cubit: subredditCubit,
-        builder: (_, List<SubmissionItem> contentList) {
-          return ListView.separated(
-              separatorBuilder: (_, __) => Divider(),
-              itemCount: contentList.length,
-              itemBuilder: (_, int index) {
-                return createListTile(subredditCubit, contentList, index);
-              });
-        });
+  Widget _getMainList(BuildContext context) {
+    Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
+        builder: (_, SubredditListState state) {
+      return ListView.separated(
+          separatorBuilder: (_, __) => Divider(),
+          itemCount: state.submissions.length,
+          itemBuilder: (_, int index) {
+            return createListTile(state.submissions, index);
+          });
+    });
     w = RefreshIndicator(
-        onRefresh: () => Future<void>( () => subredditCubit.clear()),
+        onRefresh: () => Future<void>(() =>
+            BlocProvider.of<SubredditBloc>(context)
+                .add(SubredditListClearEvent())),
         child: w);
     w = NotificationListener<ScrollNotification>(
-      onNotification: (ScrollNotification scrollInfo ) {
-        if( scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent )
-          subredditCubit.loadMore() ;
-        return true ;
-      },
-      child: w
-    ) ;
-    return w ;
+        onNotification: (ScrollNotification scrollInfo) {
+          if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent)
+            BlocProvider.of<SubredditBloc>(context)
+                .add(SubredditListLoadSubmissions(numberToLoad: 10));
+          return true;
+        },
+        child: w);
+    return w;
   }
 
   /// this is the main list tile that will go in the list
-  Widget createListTile(SubredditCubit subredditCubit,
-      List<SubmissionItem> contentList, int index) {
+  Widget createListTile(List<SubmissionItem> contentList, int index) {
     Widget w, leading, trailing;
     String title, subtitle;
 
@@ -137,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Submission s = contentList[index].submission;
       title = '${contentList[index].getTitle()}';
       subtitle =
-          '${index}: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
+          '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
       Set<PostType> postTypes = contentList[index].getPostTypes();
       String avatar = (postTypes.length == 0)
           ? "?"

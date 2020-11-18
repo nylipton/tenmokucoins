@@ -12,14 +12,16 @@ import 'package:equatable/equatable.dart';
 
 /// The state of this Cubit is a [RedditWrapper] which holds a [Reddit] instance.
 /// The wrapper is because DRAW's [Reddit] doesn't implement equality. <p>
-/// Make sure that the state isn't [null] and then check in the Reddit instance to make sure
-/// that it's authenticated. This should notify of new state when the user has authenticated.
+/// Make sure that the state isn't [null] and then check in the Reddit instance
+/// to make sure that it's authenticated. This should notify of new state when
+/// the user has authenticated.
 /// TODO implement restoring authentication
+/// TODO turn this into a Bloc with states like new, untrusted, authenticated
 class RedditClientCubit extends Cubit<RedditWrapper> {
   RedditWrapper _redditWrapper;
   String userAgentId = 'tenmokucoins';
 
-  /// stream of deep link listener updates
+  /// stream of deep-link listener updates, for getting OAuth authorization code
   StreamSubscription _sub;
 
   RedditClientCubit() : super(RedditWrapper(null)) {
@@ -55,7 +57,8 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
     }
   }
 
-  /// Instance of RedditWrapper, which may be should be untrusted at first, then authenticated.
+  /// Instance of RedditWrapper, which may be should be untrusted at first,
+  /// then authenticated
   RedditWrapper get redditWrapper => _redditWrapper;
 
   /// Launches the browser, which allows the user to login.
@@ -94,46 +97,30 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
 
 /// a wrapper around the DRAW Reddit class which makes adds equatable functionality for the Cubit
 class RedditWrapper extends Equatable {
-  SubredditCubit _subredditsCubit ;
-  final Reddit _reddit;
+  SubredditBloc _subredditsCubit ;
+  final Reddit reddit;
   final int id; //used to force identification as new since Reddit doesn't
 
-  RedditWrapper(this._reddit) : id = Random().nextInt(10000);
+  RedditWrapper(this.reddit) : id = Random().nextInt(10000);
 
+  /// gets a human-readable username with 'not logged in' if the user isn't
+  /// authenticated
   Future<String> getUsername() {
-    if (_reddit == null || !_reddit.auth.isValid)
+    if (reddit == null || !reddit.auth.isValid)
       return Future<String>.value("not logged in");
     else
-      return _reddit.user
+      return reddit.user
           .me()
           .then((r) => r.displayName)
           .catchError((err) => "Anonymous");
   }
 
   @override
-// TODO: implement props
-  List<Object> get props => [_reddit, _reddit?.auth?.isValid, id];
-
-  /// use this to get the actual Reddit instance
-  Reddit get reddit => _reddit;
+  List<Object> get props => [reddit, reddit?.auth?.isValid, id];
 
   @override
   bool get stringify => true;
 
+  /// whether the [Reddit] instance is [null] or read-only
   bool isAuthenticated( ) => !( reddit == null || reddit.readOnly ) ;
-
-  /// Once this Reddit is connected, you can get the /r/pmsforsale content
-  /// with this Cubit
-  SubredditCubit getSubredditsCubit( ) {
-
-    if( reddit != null ) {
-      if( _subredditsCubit == null ) {
-        print( "creating subreddits cubit" ) ;
-        _subredditsCubit = SubredditCubit( reddit ) ;
-      }
-    } else {
-      print( "Can't get subredditsCubit because the Reddit instance is null" ) ;
-    }
-    return _subredditsCubit ;
-  }
 }
