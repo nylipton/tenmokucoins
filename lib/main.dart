@@ -34,24 +34,24 @@ class MyApp extends StatelessWidget {
             return bloc;
           }),
         ],
-        child: MyHomePage(title: 'Tenmoku Coins'),
+        child: ListingsPage(title: 'Tenmoku Coins'),
       ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class ListingsPage extends StatefulWidget {
+  ListingsPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _ListingsPageState createState() => _ListingsPageState();
 }
 
 /// TODO Move login from FAB into app bar and show login state
 /// TODO Restyle list tile and move it into a separate class+file
-class _MyHomePageState extends State<MyHomePage> {
+class _ListingsPageState extends State<ListingsPage> {
   bool _isLoading ;
 
   /// When the user views the item [_nextPageThreshhold] away from the bottom,
@@ -60,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    super.initState() ;
     _isLoading = false ;
     BlocProvider.of<SubredditBloc>( context ).listen( ( state ) {
       setState(() {
@@ -126,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
           separatorBuilder: (_, __) => Divider(),
           itemCount: state.submissions.length + (_isLoading?1:0),
           itemBuilder: (_, int index) {
-            if( state.submissions.length - 5 == index )
+            if( ( state.submissions.length - _nextPageThreshold ) == index )
               BlocProvider.of<SubredditBloc>(context)
                   .add(SubredditListLoadSubmissions(numberToLoad: 10));
             return createListTile(state.submissions, index);

@@ -21,9 +21,8 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
   /// Hmm.... Should this be in the [SubredditListLoadingState] object?
   int _numSubmissionsGoal = 0;
 
+  /// For listening to changes in the RedditCubit
   StreamSubscription _redditCubitStreamSubscription;
-
-  Stream _redditStream;
 
   /// Don't forget to set the [RedditClientCubit] in [setRedditClientCubit]
   SubredditBloc() : super(SubredditRawState());
@@ -144,7 +143,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
   @override
   Future<Function> close() {
     _redditCubitStreamSubscription.cancel();
-    super.close();
+    return super.close();
   }
 }
 

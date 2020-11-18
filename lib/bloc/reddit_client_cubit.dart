@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
-import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
@@ -97,7 +96,6 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
 
 /// a wrapper around the DRAW Reddit class which makes adds equatable functionality for the Cubit
 class RedditWrapper extends Equatable {
-  SubredditBloc _subredditsCubit ;
   final Reddit reddit;
   final int id; //used to force identification as new since Reddit doesn't
 

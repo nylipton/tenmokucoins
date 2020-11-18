@@ -1,8 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
-import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 
 void main() {
   group('RedditTest', () {
