@@ -4,9 +4,7 @@ An app for coin collectors. This will connect to Reddit and other forums where c
 bought and sold.
 
 ## Todo list before 1.0 launch
-- Include infinite scrolling
 - Add filters
-- Update styling
 - Update IA and navigation (filters, forum login)
 - Reauthenticate automatically to Reddit
 - Save settings (firebase? local keystore?)
@@ -24,3 +22,5 @@ bought and sold.
 - Configure CD
 
 ## Done
+- Include infinite scrolling
+- Update styling
