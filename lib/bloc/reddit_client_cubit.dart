@@ -21,6 +21,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
   final logger = Logger();
   RedditWrapper _redditWrapper;
   String userAgentId = 'tenmokucoins';
+  Reddit _tempReddit ;
 
   /// stream of deep-link listener updates, for getting OAuth authorization code
   StreamSubscription _sub;
@@ -35,9 +36,9 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.d('Got authorization code $authCode');
         await closeWebView();
         // if (_redditWrapper != null && !_redditWrapper.reddit.auth.isValid) {
-        await state.reddit.auth.authorize(authCode);
+        await _tempReddit.auth.authorize(authCode);
         emit(RedditWrapper(
-            state.reddit)); // Create a new RedditWrapper to force state update
+            _tempReddit)); // Create a new RedditWrapper to force state update
         // }
       } else {
         logger.i('Got no initial link back from the authorization Uri');
@@ -66,16 +67,16 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
   void authenticate() async {
     try {
       logger.d('Starting to authenticate...');
-      Reddit reddit = Reddit.createInstalledFlowInstance(
+      _tempReddit = Reddit.createInstalledFlowInstance(
           redirectUri: Uri.parse("tenmokucoins://tenmoku.com"),
           clientId: REDDIT_CLIENT_ID,
           userAgent: userAgentId);
 
-      final authUrl = reddit.auth.url(
+      final authUrl = _tempReddit.auth.url(
           ['read', 'account', 'identity'], 'tenmokucoins-auth',
           compactLogin: true);
       logger.d("authentication URL is $authUrl");
-      emit(RedditWrapper(reddit));
+      // emit(RedditWrapper(reddit));
       if (await canLaunch(authUrl.toString())) {
         logger.d("launching authorization page");
         launch(authUrl.toString());

@@ -5,7 +5,7 @@ import 'package:draw/draw.dart';
 import 'package:equatable/equatable.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
-import 'dart:math' ;
+import 'dart:math';
 
 /// This represents a Subreddit's list of submissions (i.e. posts)
 class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
@@ -37,29 +37,22 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
   // TODO validate that this is getting callbacks from the [RedditClientCubit]
   void setRedditClientCubit(RedditClientCubit clientCubit) {
     logger.v('SubredditBloc is listening to the RedditClientCubit');
-    if (clientCubit.state != null && clientCubit.state.reddit != null) {
-      logger.d('SubredditBloc is setting the Reddit instance');
-      _reddit = clientCubit.state.reddit;
-      add(SubredditListClearEvent());
-    }
+    // if (clientCubit.state != null && clientCubit.state.reddit != null) {
+    //   logger.d('SubredditBloc is setting the Reddit instance');
+    //   _reddit = clientCubit.state.reddit;
+    //   add(SubredditListClearEvent());
+    // }
     _redditCubitStreamSubscription = clientCubit.listen((redditWrapper) {
       logger.d(
-          'SubredditBloc has been notified of an update by RedditClientCubit');
-      if (redditWrapper == null) {
-        // if the redditWrapper is now null then clear everything
-        logger.v(
-          'reddit instance is now null',
-        );
-        _reddit = null;
-        add(SubredditListClearEvent());
-      } else {
-        // if there is now a redditwrapper then save it and load up the list
-        // not sure if we care whether the user is authenticated
-        logger.d('The reddit instance has been updated and is now set');
-        _reddit = redditWrapper.reddit;
-        add(SubredditListClearEvent());
-      }
+          'SubredditBloc has been notified of an update by RedditClientCubit.');
+      add(SubredditListNewRedditClientEvent(redditWrapper.reddit));
     });
+  }
+
+  @override
+  void onError(Object error, StackTrace stackTrace) {
+    add(SubredditListErrorEvent(error.toString()));
+    super.onError(error, stackTrace);
   }
 
   @override
@@ -71,8 +64,23 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
       yield* _mapClearList(event);
     } else if (event is SubredditListNewSubmissionReceived) {
       yield await _mapSubmissionReceived(event);
+    } else if (event is SubredditListErrorEvent) {
+      _numSubmissionsGoal = state.submissions.length;
+      yield SubredditListDoneState(state.submissions, state.lastId);
+    } else if (event is SubredditListNewRedditClientEvent) {
+      _numSubmissionsGoal = 0;
+      if (event.reddit == null) {
+        logger.d('Got assigned a new reddit instance that\'s null');
+        yield SubredditRawState();
+      } else {
+        logger.d('Got assigned a new reddit instance that\'s not null');
+        _reddit = event.reddit;
+        yield SubredditListDoneState([], null);
+        add(SubredditListClearEvent());
+      }
     } else {
       logger.w('SubredditBloc got unknown event $event');
+      addError(Exception('unsupported event'));
     }
   }
 
@@ -85,7 +93,8 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
       logger.i('Received and ignoring a duplicate submission');
       return state;
     } else if (state is SubredditRawState) {
-      logger.i('Received (and ignoring) a submission from reddit while in raw state: ${event.item}');
+      logger.i(
+          'Received (and ignoring) a submission from reddit while in raw state: ${event.item}');
       return state;
     } else {
       var list = state.submissions;
@@ -108,7 +117,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
     if (state is SubredditListDoneState || state is SubredditRawState) {
       _numSubmissionsGoal = 0;
       yield SubredditListDoneState([], null);
-      add( SubredditListLoadSubmissions() ) ;
+      add(SubredditListLoadSubmissions());
     }
   }
 
@@ -117,6 +126,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
   Stream<SubredditListState> _mapLoadSubmissions(
       SubredditListLoadSubmissions event) async* {
     if (state is SubredditListDoneState) {
+      // TODO start a timer to force this out of the loading state if it's taking too long
       yield SubredditListLoadingState(state.submissions, state.lastId);
       _requestSubmissions(num: event.numberToLoad);
     }
@@ -124,17 +134,27 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
 
   /// Calls the Reddit API for the newest posts
   void _requestSubmissions({int num = defaultLoadingNum}) {
+    assert(_reddit != null);
     SubredditRef subredditRef = _reddit.subreddit(subredditName);
+
     if (state.lastId == null) {
       _numSubmissionsGoal = num;
       logger.d('SubredditBloc is requesting $num new submissions.');
-      subredditRef.newest(limit: num).listen(_process);
+      subredditRef.newest(limit: num).listen(_process).onError((e) {
+        logger.e('Unable to make Reddit request', e);
+        addError('Unable to make Reddit request');
+      });
     } else {
       _numSubmissionsGoal += num;
-      String after = 't3_'+state.lastId ;
-      logger.d(
-          'SubredditBloc is requesting $num new submissions after $after');
-      subredditRef.newest(limit: num, after: after).listen(_process);
+      String after = 't3_' + state.lastId;
+      logger.d('SubredditBloc is requesting $num new submissions after $after');
+      subredditRef
+          .newest(limit: num, after: after)
+          .listen(_process)
+          .onError((e) {
+        logger.e('Unable to make Reddit request', e);
+        addError('Unable to make Reddit request');
+      });
     }
   }
 
@@ -158,7 +178,8 @@ class SubmissionItem extends Equatable {
   final Submission submission;
 
   SubmissionItem(this.submission)
-      : _postTypes = parsePostTypes(submission.title.substring(0, min( 15, submission.title.length)));
+      : _postTypes = parsePostTypes(
+            submission.title.substring(0, min(15, submission.title.length)));
 
   /// post's title
   String getTitle() => submission.title;
@@ -265,10 +286,20 @@ abstract class SubredditListEvent extends Equatable {
   bool get stringify => true;
 }
 
-/// clear the list of subreddit submissions and then reload from scratch
+/// Used when an error occurs (such as a rebuffed network request.
+class SubredditListErrorEvent extends SubredditListEvent {
+  final String error;
+
+  SubredditListErrorEvent(this.error);
+
+  @override
+  List<Object> get props => [error];
+}
+
+/// Clear the list of subreddit submissions and then reload from scratch
 class SubredditListClearEvent extends SubredditListEvent {}
 
-/// load the initial list of subreddit submissions (the number to load is optional)
+/// Load the initial list of subreddit submissions (the number to load is optional)
 class SubredditListLoadSubmissions extends SubredditListEvent {
   final numberToLoad;
 
@@ -278,7 +309,7 @@ class SubredditListLoadSubmissions extends SubredditListEvent {
   List<Object> get props => [numberToLoad];
 }
 
-/// a new [SubmissionItem] is received and added to the list
+/// A new [SubmissionItem] is received and added to the list
 class SubredditListNewSubmissionReceived extends SubredditListEvent {
   final SubmissionItem item;
 
@@ -286,4 +317,14 @@ class SubredditListNewSubmissionReceived extends SubredditListEvent {
 
   @override
   List<Object> get props => [item];
+}
+
+/// Used when there is a new [RedditClient] set to the Bloc
+class SubredditListNewRedditClientEvent extends SubredditListEvent {
+  final Reddit reddit;
+
+  const SubredditListNewRedditClientEvent(this.reddit);
+
+  @override
+  List<Object> get props => [reddit];
 }
