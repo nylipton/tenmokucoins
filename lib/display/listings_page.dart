@@ -2,6 +2,7 @@
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
@@ -53,7 +54,8 @@ class _ListingsPageState extends State<ListingsPage> {
     return Scaffold(
         appBar: AppBar(
           elevation: 1.0,
-          title: Text(widget.title),
+          title: Text(widget.title,),
+          textTheme: GoogleFonts.poppinsTextTheme( Theme.of(context).textTheme ),
         ),
         body: Center(
             child: Column(
@@ -137,7 +139,7 @@ class _ListingsPageState extends State<ListingsPage> {
           ? "?"
           : postTypes
           .map((p) => p.toShortString())
-          .reduce((value, element) => value + element);
+          .reduce((value, element) => value + '/'+element);
       Color avatarBackgroundColor = Theme.of(context).colorScheme.primary;//Colors.grey;
       Color avatarForegroundColor = Theme.of(context).colorScheme.onPrimary;//Colors.white;
       if (postTypes.contains(PostType.BUY)) {

@@ -5,6 +5,7 @@ import 'package:draw/draw.dart';
 import 'package:equatable/equatable.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
+import 'dart:math' ;
 
 /// This represents a Subreddit's list of submissions (i.e. posts)
 class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
@@ -157,7 +158,7 @@ class SubmissionItem extends Equatable {
   final Submission submission;
 
   SubmissionItem(this.submission)
-      : _postTypes = parsePostTypes(submission.title.substring(0, 8));
+      : _postTypes = parsePostTypes(submission.title.substring(0, min( 15, submission.title.length)));
 
   /// post's title
   String getTitle() => submission.title;
@@ -186,9 +187,9 @@ class SubmissionItem extends Equatable {
 
   static Set<PostType> parsePostTypes(String s) {
     Set<PostType> types = {};
-    if (s.contains('WTB')) types.add(PostType.BUY);
-    if (s.contains('WTS')) types.add(PostType.SELL);
-    if (s.contains('WTT')) types.add(PostType.TRADE);
+    if (s.toUpperCase().contains('WTB')) types.add(PostType.BUY);
+    if (s.toUpperCase().contains('WTS')) types.add(PostType.SELL);
+    if (s.toUpperCase().contains('WTT')) types.add(PostType.TRADE);
     return types;
   }
 
