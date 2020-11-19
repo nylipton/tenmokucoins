@@ -108,7 +108,7 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
     if (state is SubredditListDoneState || state is SubredditRawState) {
       _numSubmissionsGoal = 0;
       yield SubredditListDoneState([], null);
-      _requestSubmissions();
+      add( SubredditListLoadSubmissions() ) ;
     }
   }
 
