@@ -188,6 +188,12 @@ class _ListingsPageState extends State<ListingsPage> {
         subtitle: Text(subtitle),
         dense: true,
         trailing: trailing);
+    w = Column(
+      children: [
+        w,
+        Divider(height: 0,)
+      ],
+    ) ;
 
     return w;
   }
