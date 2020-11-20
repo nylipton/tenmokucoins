@@ -1,4 +1,7 @@
 import 'package:draw/draw.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,7 +70,7 @@ class _ListingsPageState extends State<ListingsPage> {
                 logger.v('BlocBuilder called with $redditWrapper');
                 Widget w;
                 if (redditWrapper == null || redditWrapper.reddit == null)
-                  w = Center(child: CircularProgressIndicator());
+                  w = Center(child: ( Platform.isIOS)?CupertinoActivityIndicator(): CircularProgressIndicator());
                 else
                   w = Expanded(child: _getMainList(context));
                 return w;
@@ -98,41 +101,49 @@ class _ListingsPageState extends State<ListingsPage> {
   Widget _getMainList(BuildContext context) {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
-      return CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            elevation: 1.0,
-            title: Text(
-              widget.title,
-            ),
-            textTheme:
-                GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-            floating: true,
-            // expandedHeight: 150,
-            // flexibleSpace: Image.network("https://upload.wikimedia.org/wikipedia/commons/f/fa/NNC-US-1907-G%2420-Saint_Gaudens_%28Roman%2C_ultra_high_relief%2C_wire_edge%29.jpg"),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                if ((state.submissions.length - _nextPageThreshold) == index)
+      List<Widget> sliverlist = [];
+
+      sliverlist.add(SliverAppBar(
+        elevation: 1.0,
+        title: Text(
+          widget.title,
+        ),
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+        pinned: true,
+        // floating: true,
+      ));
+      if (Platform.isIOS) {
+        sliverlist.add(CupertinoSliverRefreshControl(
+          onRefresh: () =>
+              Future<void>(() =>
                   BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListLoadSubmissions(numberToLoad: 10));
-                return createListTile(state.submissions, index);
-              },
-              childCount: state.submissions.length + (_isLoading ? 1 : 0),
-            ),
-          ),
-        ],
-      );
+                      .add(SubredditListClearEvent())),
+        ));
+      }
+      sliverlist.add(SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if ((state.submissions.length - _nextPageThreshold) == index)
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListLoadSubmissions(numberToLoad: 10));
+            return createListTile(state.submissions, index);
+          },
+          childCount: state.submissions.length + (_isLoading ? 1 : 0),
+        ),
+      ));
+
+      return CustomScrollView(slivers: sliverlist,
+        shrinkWrap: true,);
     });
 
     // RefreshIndicator is so the list will clear and refresh when pulled down
-    w = RefreshIndicator(
-        onRefresh: () => Future<void>(() =>
-            BlocProvider.of<SubredditBloc>(context)
-                .add(SubredditListClearEvent())),
-        child: w);
-
+    if (!Platform.isIOS) {
+      w = RefreshIndicator(
+          onRefresh: () => Future<void>(() =>
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListClearEvent())),
+          child: w);
+    }
     return w;
   }
 
@@ -141,16 +152,19 @@ class _ListingsPageState extends State<ListingsPage> {
     Widget w, leading, trailing;
     String title, subtitle;
 
-    if (contentList.length == 0 || index == contentList.length) {
+    if( contentList.length == 0 ) {
+      return Container() ;
+    }
+    else if ( index == contentList.length ) {
       return Center(
           child: Padding(
         padding: const EdgeInsets.all(8),
-        child: CircularProgressIndicator(),
+        child: ( Platform.isIOS)?CupertinoActivityIndicator(): CircularProgressIndicator(),
       ));
     } else {
       Submission s = contentList[index].submission;
       title =
-          '${contentList[index].getTitle().replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "").replaceAll(RegExp("^\\s*"),"")}';
+          '${contentList[index].getTitle().replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "").replaceAll(RegExp("^\\s*"), "")}';
       subtitle =
           '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
       Set<PostType> postTypes = contentList[index].getPostTypes();
