@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +9,8 @@ import 'package:logger/logger.dart';
 import 'bloc/reddit_client_cubit.dart';
 import 'bloc/subreddit_cubit.dart';
 import 'display/listings_page.dart';
+
+import 'package:flutter/cupertino.dart';
 
 void main()  {
   // LicenseRegistry.addLicense(() async* {
@@ -44,6 +48,28 @@ class MyApp extends StatelessWidget {
         colorScheme: tenmokuColorScheme,
         textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme)) ;
 
+    if( Platform.isIOS ) {
+      return Theme(
+        data: theme,
+        child: CupertinoApp(
+          title: 'Tenmoku Coin Trader',
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider<RedditClientCubit>(
+                create: (context) => RedditClientCubit(),
+              ),
+              BlocProvider<SubredditBloc>(create: (context) {
+                var bloc = SubredditBloc();
+                bloc.setRedditClientCubit(
+                    BlocProvider.of<RedditClientCubit>(context));
+                return bloc;
+              }),
+            ],
+            child: ListingsPage(title: 'Tenmoku Coin Trader'),
+          ),
+        ),
+      ) ;
+    }
     return MaterialApp(
       title: 'Tenmoku Coin Trader',
       theme: theme,

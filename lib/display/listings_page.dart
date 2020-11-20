@@ -70,7 +70,10 @@ class _ListingsPageState extends State<ListingsPage> {
                 logger.v('BlocBuilder called with $redditWrapper');
                 Widget w;
                 if (redditWrapper == null || redditWrapper.reddit == null)
-                  w = Center(child: ( Platform.isIOS)?CupertinoActivityIndicator(): CircularProgressIndicator());
+                  w = Center(
+                      child: (Platform.isIOS)
+                          ? CupertinoActivityIndicator()
+                          : CircularProgressIndicator());
                 else
                   w = Expanded(child: _getMainList(context));
                 return w;
@@ -103,21 +106,30 @@ class _ListingsPageState extends State<ListingsPage> {
         builder: (_, SubredditListState state) {
       List<Widget> sliverlist = [];
 
-      sliverlist.add(SliverAppBar(
-        elevation: 1.0,
-        title: Text(
-          widget.title,
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-        pinned: true,
-        // floating: true,
-      ));
+      Widget appBar;
+      if (Platform.isIOS)
+        appBar = CupertinoSliverNavigationBar(
+          largeTitle: Text( widget.title ),
+          backgroundColor: Theme.of( context ).primaryColor,
+        );
+      else
+        appBar = SliverAppBar(
+          elevation: 1.0,
+          title: Text(
+            widget.title,
+          ),
+          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+          pinned: true,
+          // floating: true,
+        );
+
+      sliverlist.add(appBar);
+
       if (Platform.isIOS) {
         sliverlist.add(CupertinoSliverRefreshControl(
-          onRefresh: () =>
-              Future<void>(() =>
-                  BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListClearEvent())),
+          onRefresh: () => Future<void>(() =>
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListClearEvent())),
         ));
       }
       sliverlist.add(SliverList(
@@ -132,8 +144,10 @@ class _ListingsPageState extends State<ListingsPage> {
         ),
       ));
 
-      return CustomScrollView(slivers: sliverlist,
-        shrinkWrap: true,);
+      return CustomScrollView(
+        slivers: sliverlist,
+        shrinkWrap: true,
+      );
     });
 
     // RefreshIndicator is so the list will clear and refresh when pulled down
@@ -152,14 +166,15 @@ class _ListingsPageState extends State<ListingsPage> {
     Widget w, leading, trailing;
     String title, subtitle;
 
-    if( contentList.length == 0 ) {
-      return Container() ;
-    }
-    else if ( index == contentList.length ) {
+    if (contentList.length == 0) {
+      return Container();
+    } else if (index == contentList.length) {
       return Center(
           child: Padding(
         padding: const EdgeInsets.all(8),
-        child: ( Platform.isIOS)?CupertinoActivityIndicator(): CircularProgressIndicator(),
+        child: (Platform.isIOS)
+            ? CupertinoActivityIndicator()
+            : CircularProgressIndicator(),
       ));
     } else {
       Submission s = contentList[index].submission;
