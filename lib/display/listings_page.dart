@@ -149,7 +149,8 @@ class _ListingsPageState extends State<ListingsPage> {
       ));
     } else {
       Submission s = contentList[index].submission;
-      title = '${contentList[index].getTitle()}';
+      title =
+          '${contentList[index].getTitle().replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "").replaceAll(RegExp("^\\s*"),"")}';
       subtitle =
           '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
       Set<PostType> postTypes = contentList[index].getPostTypes();
@@ -159,18 +160,10 @@ class _ListingsPageState extends State<ListingsPage> {
               .map((p) => p.toShortString())
               .reduce((value, element) => value + '/' + element);
       Color avatarBackgroundColor =
-          Theme.of(context).colorScheme.primary; //Colors.grey;
+          Theme.of(context).colorScheme.primaryVariant; //Colors.grey;
       Color avatarForegroundColor =
           Theme.of(context).colorScheme.onPrimary; //Colors.white;
-      if (postTypes.contains(PostType.BUY)) {
-        avatarBackgroundColor = Color(0xA0F2CC8F); //Colors.blueGrey;
-      } else if (postTypes.contains(PostType.SELL)) {
-        avatarBackgroundColor = Color(0xFFF2CC8F); //Colors.lightGreen;
-      }
-      // if (postTypes.length > 1 ) {
-      //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;
-      //   avatarBackgroundColor = hsl.withLightness( hsl.lightness + .2 ).toColor() ;
-      // }
+
       leading = CircleAvatar(
         child: Text(avatar, style: TextStyle(color: avatarForegroundColor)),
         backgroundColor: avatarBackgroundColor,
@@ -191,9 +184,11 @@ class _ListingsPageState extends State<ListingsPage> {
     w = Column(
       children: [
         w,
-        Divider(height: 0,)
+        Divider(
+          height: 0,
+        )
       ],
-    ) ;
+    );
 
     return w;
   }

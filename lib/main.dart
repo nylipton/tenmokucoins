@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       onError: Color(0xFF3D405B),
       primary: Color(0xFFE07A5F),
       primaryVariant: Color(0xAAE07A5F),
-      onPrimary: Color(0xFF3D405B),
+      onPrimary: Color(0xFFF4F1DE),
       secondary: Color(0xFF81B29A),
       secondaryVariant: Color(0xAA81B29A),
       onSecondary: Color(0xFF3D405B),
