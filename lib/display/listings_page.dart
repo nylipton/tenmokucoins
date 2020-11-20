@@ -1,4 +1,3 @@
-
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,22 +23,23 @@ class ListingsPage extends StatefulWidget {
 /// TODO Restyle list tile and move it into a separate class+file
 class _ListingsPageState extends State<ListingsPage> {
   /// if this is currently loading new data
-  bool _isLoading ;
+  bool _isLoading;
+
   var logger = Logger();
 
   /// When the user views the item [_nextPageThreshhold] away from the bottom,
   /// more items are requested from the server
-  static const int _nextPageThreshold = 5 ;
+  static const int _nextPageThreshold = 5;
 
   @override
   void initState() {
-    super.initState() ;
-    _isLoading = false ;
-    BlocProvider.of<SubredditBloc>( context ).listen( ( state ) {
+    super.initState();
+    _isLoading = false;
+    BlocProvider.of<SubredditBloc>(context).listen((state) {
       setState(() {
-        _isLoading = ( state is SubredditListLoadingState ) ;
+        _isLoading = (state is SubredditListLoadingState);
       });
-    } ) ;
+    });
   }
 
   @override
@@ -52,40 +52,40 @@ class _ListingsPageState extends State<ListingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          elevation: 1.0,
-          title: Text(widget.title,),
-          textTheme: GoogleFonts.poppinsTextTheme( Theme.of(context).textTheme ),
-        ),
+        // appBar: AppBar(
+        //   elevation: 1.0,
+        //   title: Text(widget.title,),
+        //   textTheme: GoogleFonts.poppinsTextTheme( Theme.of(context).textTheme ),
+        // ),
         body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  BlocBuilder<RedditClientCubit, RedditWrapper>(
-                      builder: (context, redditWrapper) {
-                        logger.v('BlocBuilder called with $redditWrapper');
-                        Widget w;
-                        if (redditWrapper == null || redditWrapper.reddit == null)
-                          w = Center(child: CircularProgressIndicator());
-                        else
-                          w = Expanded(child: _getMainList(context));
-                        return w;
-                      }),
-                ])),
+              BlocBuilder<RedditClientCubit, RedditWrapper>(
+                  builder: (context, redditWrapper) {
+                logger.v('BlocBuilder called with $redditWrapper');
+                Widget w;
+                if (redditWrapper == null || redditWrapper.reddit == null)
+                  w = Center(child: CircularProgressIndicator());
+                else
+                  w = Expanded(child: _getMainList(context));
+                return w;
+              }),
+            ])),
         floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
             builder: (_, redditWrapper) {
-              Widget w;
-              if (redditWrapper != null && redditWrapper.isAuthenticated())
-                w = Container();
-              else
-                w = FloatingActionButton(
-                  onPressed: () => _authenticate(context),
-                  tooltip: 'Authenticate to Reddit',
-                  child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
-                );
-              return w;
-            }));
+          Widget w;
+          if (redditWrapper != null && redditWrapper.isAuthenticated())
+            w = Container();
+          else
+            w = FloatingActionButton(
+              onPressed: () => _authenticate(context),
+              tooltip: 'Authenticate to Reddit',
+              child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
+            );
+          return w;
+        }));
   }
 
   void _authenticate(BuildContext context) {
@@ -98,16 +98,34 @@ class _ListingsPageState extends State<ListingsPage> {
   Widget _getMainList(BuildContext context) {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
-          return ListView.separated(
-              separatorBuilder: (_, __) => Divider(),
-              itemCount: state.submissions.length + (_isLoading?1:0),
-              itemBuilder: (_, int index) {
-                if( ( state.submissions.length - _nextPageThreshold ) == index )
+      return CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            elevation: 1.0,
+            title: Text(
+              widget.title,
+            ),
+            textTheme:
+                GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+            floating: true,
+            // expandedHeight: 150,
+            // flexibleSpace: Image.network("https://upload.wikimedia.org/wikipedia/commons/f/fa/NNC-US-1907-G%2420-Saint_Gaudens_%28Roman%2C_ultra_high_relief%2C_wire_edge%29.jpg"),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if ((state.submissions.length - _nextPageThreshold) == index)
                   BlocProvider.of<SubredditBloc>(context)
                       .add(SubredditListLoadSubmissions(numberToLoad: 10));
                 return createListTile(state.submissions, index);
-              });
-        });
+              },
+              childCount: state.submissions.length + (_isLoading ? 1 : 0),
+            ),
+          ),
+        ],
+      );
+    });
+
     // RefreshIndicator is so the list will clear and refresh when pulled down
     w = RefreshIndicator(
         onRefresh: () => Future<void>(() =>
@@ -126,26 +144,28 @@ class _ListingsPageState extends State<ListingsPage> {
     if (contentList.length == 0 || index == contentList.length) {
       return Center(
           child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: CircularProgressIndicator(),
-          ));
+        padding: const EdgeInsets.all(8),
+        child: CircularProgressIndicator(),
+      ));
     } else {
       Submission s = contentList[index].submission;
       title = '${contentList[index].getTitle()}';
       subtitle =
-      '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
+          '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
       Set<PostType> postTypes = contentList[index].getPostTypes();
       String avatar = (postTypes.length == 0)
           ? "?"
           : postTypes
-          .map((p) => p.toShortString())
-          .reduce((value, element) => value + '/'+element);
-      Color avatarBackgroundColor = Theme.of(context).colorScheme.primary;//Colors.grey;
-      Color avatarForegroundColor = Theme.of(context).colorScheme.onPrimary;//Colors.white;
+              .map((p) => p.toShortString())
+              .reduce((value, element) => value + '/' + element);
+      Color avatarBackgroundColor =
+          Theme.of(context).colorScheme.primary; //Colors.grey;
+      Color avatarForegroundColor =
+          Theme.of(context).colorScheme.onPrimary; //Colors.white;
       if (postTypes.contains(PostType.BUY)) {
-        avatarBackgroundColor = Color(0xA0F2CC8F);//Colors.blueGrey;
+        avatarBackgroundColor = Color(0xA0F2CC8F); //Colors.blueGrey;
       } else if (postTypes.contains(PostType.SELL)) {
-        avatarBackgroundColor = Color(0xFFF2CC8F);//Colors.lightGreen;
+        avatarBackgroundColor = Color(0xFFF2CC8F); //Colors.lightGreen;
       }
       // if (postTypes.length > 1 ) {
       //   final hsl = HSLColor.fromColor( avatarBackgroundColor ) ;

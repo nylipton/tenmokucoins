@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
 
     ThemeData theme = ThemeData.from(
         colorScheme: tenmokuColorScheme,
-        textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme));
+        textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme)) ;
 
     return MaterialApp(
       title: 'Tenmoku Coin Trader',
