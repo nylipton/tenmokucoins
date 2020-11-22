@@ -32,7 +32,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
             label: 'Posts',
           ),
           BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.text_bubble), label: 'Messages'),
+              icon: Icon(CupertinoIcons.conversation_bubble), label: 'Messages'),
           BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.ellipsis_circle), label: 'More'),
         ],
