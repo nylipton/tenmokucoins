@@ -11,6 +11,7 @@ import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'DateTimeFormatter.dart';
+import 'home_app_bar.dart';
 
 /// Shows a list of postings from Reddit.
 class ListingsPage extends StatefulWidget {
@@ -34,6 +35,13 @@ class _ListingsPageState extends State<ListingsPage> {
   /// more items are requested from the server
   static const int _nextPageThreshold = 5;
 
+  static const String accounts = 'Accounts';
+
+  static const String feedback = 'Feedback';
+
+  /// Overflow menu options
+  static const List<String> overflowMenu = [accounts, feedback];
+
   @override
   void initState() {
     super.initState();
@@ -55,43 +63,41 @@ class _ListingsPageState extends State<ListingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        // appBar: AppBar(
-        //   elevation: 1.0,
-        //   title: Text(widget.title,),
-        //   textTheme: GoogleFonts.poppinsTextTheme( Theme.of(context).textTheme ),
-        // ),
-        body: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-              BlocBuilder<RedditClientCubit, RedditWrapper>(
-                  builder: (context, redditWrapper) {
-                logger.v('BlocBuilder called with $redditWrapper');
-                Widget w;
-                if (redditWrapper == null || redditWrapper.reddit == null)
-                  w = Center(
-                      child: (Platform.isIOS)
-                          ? CupertinoActivityIndicator()
-                          : CircularProgressIndicator());
-                else
-                  w = Expanded(child: _getMainList(context));
-                return w;
-              }),
-            ])),
-        floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
-            builder: (_, redditWrapper) {
-          Widget w;
-          if (redditWrapper != null && redditWrapper.isAuthenticated())
-            w = Container();
-          else
-            w = FloatingActionButton(
-              onPressed: () => _authenticate(context),
-              tooltip: 'Authenticate to Reddit',
-              child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
-            );
-          return w;
-        }));
+      body: Center(
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+            BlocBuilder<RedditClientCubit, RedditWrapper>(
+                builder: (context, redditWrapper) {
+              logger.v('BlocBuilder called with $redditWrapper');
+              Widget w;
+              if (redditWrapper == null || redditWrapper.reddit == null)
+                w = Center(
+                    child: (Platform.isIOS)
+                        ? CupertinoActivityIndicator()
+                        : CircularProgressIndicator());
+              else
+                w = Expanded(child: _getMainList(context));
+              return w;
+            }),
+          ])),
+      bottomNavigationBar: HomeAppBar(),
+      // floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
+      //     builder: (_, redditWrapper) {
+      //   Widget w;
+      //   if (redditWrapper != null && redditWrapper.isAuthenticated())
+      //     w = Container();
+      //   else
+      //     w = FloatingActionButton(
+      //       onPressed: () => _authenticate(context),
+      //       tooltip: 'Authenticate to Reddit',
+      //       child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
+      //     );
+      //   return w;
+      // }
+      // )
+    );
   }
 
   void _authenticate(BuildContext context) {
@@ -109,9 +115,14 @@ class _ListingsPageState extends State<ListingsPage> {
       Widget appBar;
       if (Platform.isIOS)
         appBar = CupertinoSliverNavigationBar(
-          largeTitle: Text( widget.title ),
-          backgroundColor: Theme.of( context ).primaryColor,
-        );
+          backgroundColor: Theme.of( context ).colorScheme.primary,
+            largeTitle: Text(widget.title),
+            trailing: IconButton(
+              icon: Icon(CupertinoIcons.slider_horizontal_3,
+                  color: Theme.of( context ).colorScheme.onPrimary),
+              tooltip: 'Filter posts',
+              onPressed: _filter,
+            ));
       else
         appBar = SliverAppBar(
           elevation: 1.0,
@@ -120,7 +131,22 @@ class _ListingsPageState extends State<ListingsPage> {
           ),
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
           pinned: true,
-          // floating: true,
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              tooltip: 'Filter posts',
+              onPressed: _filter,
+            ),
+            PopupMenuButton<String>(
+              onSelected: _choiceAction,
+              itemBuilder: (_) {
+                return overflowMenu.map((String choice) {
+                  return PopupMenuItem<String>(
+                      value: choice, child: Text(choice));
+                }).toList();
+              },
+            )
+          ],
         );
 
       sliverlist.add(appBar);
@@ -226,5 +252,20 @@ class _ListingsPageState extends State<ListingsPage> {
   _launch(Uri shortlink) {
     logger.d(shortlink);
     launch(shortlink.toString());
+  }
+
+  // TODO implement filters
+  void _filter() {
+    logger.d('Filter main submissions list selected');
+  }
+
+  /// For the overflow menu choice
+  void _choiceAction(String choice) {
+    if (choice == accounts) {
+      logger.d('User chose to edit accounts');
+      _authenticate(context);
+    } else {
+      logger.d('User chose to give feedback');
+    }
   }
 }

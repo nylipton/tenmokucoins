@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import 'display/listings_page.dart';
 
 import 'package:flutter/cupertino.dart';
 
-void main()  {
+void main() {
   // LicenseRegistry.addLicense(() async* {
   //   final license = await rootBundle.loadString('google_fonts/OFL.txt');
   //   yield LicenseEntryWithLineBreaks(['google_fonts'], license);
@@ -32,80 +31,75 @@ class MyApp extends StatelessWidget {
     ColorScheme tenmokuColorScheme = ColorScheme.light(
       background: Color(0xFFF4F1DE),
       onBackground: Color(0xFF3D405B),
+
       error: Colors.red,
       onError: Color(0xFF3D405B),
+
       primary: Color(0xFFE07A5F),
       primaryVariant: Color(0xAAE07A5F),
       onPrimary: Color(0xFF3D405B),
+
       secondary: Color(0xFF81B29A),
       secondaryVariant: Color(0xAA81B29A),
       onSecondary: Color(0xFF3D405B),
+
       surface: Color(0xFFF4F1DE),
       onSurface: Colors.black,
     );
 
     ThemeData theme = ThemeData.from(
-        colorScheme: tenmokuColorScheme,
-        textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme)) ;
+            colorScheme: tenmokuColorScheme,
+            textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme))
+        .copyWith(cupertinoOverrideTheme: NoDefaultCupertinoThemeData(
 
-    if( Platform.isIOS ) {
+    ));
+
+    if (Platform.isIOS) {
+    //   MaterialBasedCupertinoThemeData cTheme =
+    //       MaterialBasedCupertinoThemeData(materialTheme: theme) ;
+      // .copyWith(
+      //       barBackgroundColor: theme.colorScheme.primary,
+      //       primaryContrastingColor: theme.colorScheme.onPrimary,
+      // ) ;
+
       return Theme(
         data: theme,
         child: CupertinoApp(
-          title: 'Tenmoku Coin Trader',
-          home: MultiBlocProvider(
-            providers: [
-              BlocProvider<RedditClientCubit>(
-                create: (context) => RedditClientCubit(),
-              ),
-              BlocProvider<SubredditBloc>(create: (context) {
-                var bloc = SubredditBloc();
-                bloc.setRedditClientCubit(
-                    BlocProvider.of<RedditClientCubit>(context));
-                return bloc;
-              }),
-            ],
-            child: ListingsPage(title: 'Tenmoku Coin Trader'),
-          ),
+        title: 'Tenmoku Coins',
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<RedditClientCubit>(
+              create: (context) => RedditClientCubit(),
+            ),
+            BlocProvider<SubredditBloc>(create: (context) {
+              var bloc = SubredditBloc();
+              bloc.setRedditClientCubit(
+                  BlocProvider.of<RedditClientCubit>(context));
+              return bloc;
+            }),
+          ],
+          child: ListingsPage(title: 'Tenmoku Coins'),
         ),
-      ) ;
+      ) ) ;
+    } else {
+      return MaterialApp(
+        title: 'Tenmoku Coin Trader',
+        theme: theme,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<RedditClientCubit>(
+              create: (context) => RedditClientCubit(),
+            ),
+            BlocProvider<SubredditBloc>(create: (context) {
+              var bloc = SubredditBloc();
+              bloc.setRedditClientCubit(
+                  BlocProvider.of<RedditClientCubit>(context));
+              return bloc;
+            }),
+          ],
+          child: ListingsPage(title: 'Tenmoku Coin Trader'),
+        ),
+      );
     }
-    return MaterialApp(
-      title: 'Tenmoku Coin Trader',
-      theme: theme,
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<RedditClientCubit>(
-            create: (context) => RedditClientCubit(),
-          ),
-          BlocProvider<SubredditBloc>(create: (context) {
-            var bloc = SubredditBloc();
-            bloc.setRedditClientCubit(
-                BlocProvider.of<RedditClientCubit>(context));
-            return bloc;
-          }),
-        ],
-        child: ListingsPage(title: 'Tenmoku Coin Trader'),
-      ),
-    );
   }
 }
-
-/*
-    ColorScheme tenmokuColorScheme = ColorScheme.light(
-      background: Colors.white,
-      onBackground: Color( 0xFF14213D),
-      error: Colors.red,
-
-      primary: Color(0xFFE5E5E5),
-      primaryVariant: Colors.white,
-      onPrimary: Color( 0xFF14213D),
-
-      secondary: Color(0xFFFCA311),
-      secondaryVariant: Color(0xFF794B01),
-      onSecondary: Colors.black,
-
-      surface: Colors.white,
-      onSurface: Colors.black,
-    ) ;
- */
