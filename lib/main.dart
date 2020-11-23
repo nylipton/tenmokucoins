@@ -95,9 +95,10 @@ class Router {
           route = MaterialPageRoute(builder: (_) => HomePage());
         break;
       case filterRoute:
+        var tags = settings.arguments ;
         if( iOS )
           route = CupertinoPageRoute(
-              fullscreenDialog: true, builder: (_) => FilterPage());
+              fullscreenDialog: true, builder: (_) => FilterPage(tags: tags));
         else
           route = MaterialPageRoute(
             fullscreenDialog: true, builder: (_) => FilterPage());

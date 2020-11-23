@@ -15,7 +15,7 @@ import 'home_app_bar.dart';
 
 /// Shows a list of postings from Reddit.
 class ListingsPage extends StatefulWidget {
-  ListingsPage({Key key, this.title}) : super(key: key);
+  ListingsPage({Key key, this.title }) : super(key: key);
 
   final String title;
 
@@ -42,10 +42,15 @@ class _ListingsPageState extends State<ListingsPage> {
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, feedback];
 
+  /// tags are used as filters for the list (or highlights, depending on implementation)
+  List<String> tags ;
+
   @override
   void initState() {
     super.initState();
     _isLoading = false;
+    /// TODO store tags locally on the device
+    tags = [] ;
     BlocProvider.of<SubredditBloc>(context).listen((state) {
       setState(() {
         _isLoading = (state is SubredditListLoadingState);
@@ -261,9 +266,18 @@ class _ListingsPageState extends State<ListingsPage> {
     launch(shortlink.toString());
   }
 
-  void _filter() {
+  /// Launches the filter dialog
+  _filter() async {
     logger.d('Filter main submissions list selected');
-    Navigator.pushNamed( context, '/filter' ) ;
+    final result = await Navigator.pushNamed( context, '/filter', arguments: tags ) ;
+    logger.d( 'Filter dialog returned $result' ) ;
+    if( result != null ) {
+      setState(() {
+        tags = result ;
+      });
+      // Snackbar can't find a scaffold!?
+      // ScaffoldMessenger.of( context ).showSnackBar( const SnackBar(content: Text( 'New filters set'),)) ;
+    }
   }
 
   /// For the overflow menu choice

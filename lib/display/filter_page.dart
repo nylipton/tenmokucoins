@@ -4,14 +4,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chips_choice/chips_choice.dart';
-import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 
 class FilterPage extends StatefulWidget {
   static const title = 'Filter';
+  var tags ;
 
   @override
-  _FilterPageState createState() => _FilterPageState();
+  _FilterPageState createState() => _FilterPageState(tags: tags);
+
+  FilterPage({this.tags});
 }
 
 class _FilterPageState extends State<FilterPage> {
@@ -112,14 +114,16 @@ class _FilterPageState extends State<FilterPage> {
     ]
   };
 
+  /// The applied tags (i.e. the selected chips)
   List<String> tags = [];
 
-  final formKey = GlobalKey();
+  _FilterPageState({this.tags});
 
   @override
   void initState() {
-    // TODO load this from a bloc
-    tags = [];
+    super.initState() ;
+    if( tags == null )
+      tags = [] ;
   }
 
   @override
@@ -206,10 +210,11 @@ class _FilterPageState extends State<FilterPage> {
   void _save() {
     logger.d('Saving new filter settings: $tags');
     // TODO save the new filters to a bloc
-    Navigator.pop( context ) ;
+    Navigator.pop( context, tags ) ;
   }
 }
 
+/// The filter contents, implemented with chips
 class Content extends StatefulWidget {
   final String title;
   final Widget child;
