@@ -246,10 +246,11 @@ class _ListingsPageState extends State<ListingsPage> {
     List<WidgetSpan> tagWidgets = contentList[index].matchingTags.map((tag) {
       return WidgetSpan(
           child: Badge(
+            padding: EdgeInsets.fromLTRB(3,0,3,0),
             shape: BadgeShape.square,
             badgeColor: Theme.of(context).colorScheme.secondary,
             borderRadius: BorderRadius.circular(15.0),
-            badgeContent: Text(tag, style: TextStyle(fontSize: 10.0)),
+            badgeContent: Text(tag, style: Theme.of( context ).textTheme.bodyText1),
             elevation: 0.0,
           ),
           alignment: PlaceholderAlignment.baseline,
@@ -333,8 +334,8 @@ class SubmissionWrapper {
   SubmissionWrapper({this.item, List<String> tags = const []})
       : assert(item != null) {
     tags.forEach((tag) {
-      if (RegExp(tag, caseSensitive: false).firstMatch(item.getTitle()) !=
-          null) {
+      RegExp regex = RegExp(tag, caseSensitive: false) ;
+      if (regex.firstMatch(item.getTitle()) !=null || regex.firstMatch(item.submission.body) != null ) {
         _matchingTags.add(tag);
         _hasMatch = true;
       }
