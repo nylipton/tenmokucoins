@@ -1,4 +1,4 @@
-import 'package:draw/draw.dart';
+import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io';
 
@@ -15,7 +15,7 @@ import 'home_app_bar.dart';
 
 /// Shows a list of postings from Reddit.
 class ListingsPage extends StatefulWidget {
-  ListingsPage({Key key, this.title }) : super(key: key);
+  ListingsPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
@@ -43,14 +43,15 @@ class _ListingsPageState extends State<ListingsPage> {
   static const List<String> overflowMenu = [accounts, feedback];
 
   /// tags are used as filters for the list (or highlights, depending on implementation)
-  List<String> tags ;
+  List<String> tags;
 
   @override
   void initState() {
     super.initState();
     _isLoading = false;
+
     /// TODO store tags locally on the device
-    tags = [] ;
+    tags = [];
     BlocProvider.of<SubredditBloc>(context).listen((state) {
       setState(() {
         _isLoading = (state is SubredditListLoadingState);
@@ -110,27 +111,30 @@ class _ListingsPageState extends State<ListingsPage> {
   Widget _getMainList(BuildContext context) {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
+      List<SubmissionWrapper> listWrappers = state.submissions
+          .map((s) => SubmissionWrapper(item: s, tags: tags))
+          .toList(growable: false);
+      // listWrappers.sort((a, b) {
+      //   int aMatches = a.matchingTags.length;
+      //   int bMatches = b.matchingTags.length;
+      //   if (aMatches == bMatches)
+      //     return a.item.getTimestamp().compareTo(b.item.getTimestamp());
+      //   else
+      //     return a.matchingTags.length.compareTo(b.matchingTags.length);
+      // });
+
       List<Widget> sliverlist = [];
 
       Widget appBar;
       if (Platform.isIOS) {
         appBar = CupertinoSliverNavigationBar(
-            backgroundColor: Theme
-                .of(context)
-                .colorScheme
-                .primary,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             largeTitle: Text(widget.title),
             trailing: Material(
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .primary,
+              color: Theme.of(context).colorScheme.primary,
               child: IconButton(
                 icon: Icon(CupertinoIcons.slider_horizontal_3,
-                    color: Theme
-                        .of(context)
-                        .colorScheme
-                        .onPrimary),
+                    color: Theme.of(context).colorScheme.onPrimary),
                 tooltip: 'Filter posts',
                 onPressed: _filter,
               ),
@@ -170,15 +174,18 @@ class _ListingsPageState extends State<ListingsPage> {
                   .add(SubredditListClearEvent())),
         ));
       }
+      // this is the actual list of submissions
       sliverlist.add(SliverList(
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            if ((state.submissions.length - _nextPageThreshold) == index)
+            // if we're near the end, request more submissions from Reddit
+            if ((listWrappers.length - _nextPageThreshold) == index)
               BlocProvider.of<SubredditBloc>(context)
                   .add(SubredditListLoadSubmissions(numberToLoad: 10));
-            return createListTile(state.submissions, index);
+            // generate the tile for the submission
+            return createListTile(listWrappers, index);
           },
-          childCount: state.submissions.length + (_isLoading ? 1 : 0),
+          childCount: listWrappers.length + (_isLoading ? 1 : 0),
         ),
       ));
 
@@ -200,9 +207,8 @@ class _ListingsPageState extends State<ListingsPage> {
   }
 
   /// this is the main list tile that will go in the list
-  Widget createListTile(List<SubmissionItem> contentList, int index) {
+  Widget createListTile(List<SubmissionWrapper> contentList, int index) {
     Widget w, leading, trailing;
-    String title, subtitle;
 
     if (contentList.length == 0) {
       return Container();
@@ -215,37 +221,46 @@ class _ListingsPageState extends State<ListingsPage> {
             : CircularProgressIndicator(),
       ));
     } else {
-      Submission s = contentList[index].submission;
-      title =
-          '${contentList[index].getTitle().replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "").replaceAll(RegExp("^\\s*"), "")}';
-      subtitle =
-          '$index: ${contentList[index].getSubredditTitle()}: ${DateTimeFormatter.format(contentList[index].getTimestamp())}';
-      Set<PostType> postTypes = contentList[index].getPostTypes();
-      String avatar = (postTypes.length == 0)
-          ? "?"
-          : postTypes
-              .map((p) => p.toShortString())
-              .reduce((value, element) => value + '/' + element);
-      Color avatarBackgroundColor =
-          Theme.of(context).colorScheme.primaryVariant; //Colors.grey;
-      Color avatarForegroundColor =
-          Theme.of(context).colorScheme.onPrimary; //Colors.white;
+      Color avatarBackgroundColor = contentList[index].hasMatch
+          ? Theme.of(context).colorScheme.secondary
+          : Theme.of(context).colorScheme.primaryVariant;
+      Color avatarForegroundColor = contentList[index].hasMatch
+          ? Theme.of(context).colorScheme.onSecondary
+          : Theme.of(context).colorScheme.onPrimary;
 
       leading = CircleAvatar(
-        child: Text(avatar, style: TextStyle(color: avatarForegroundColor)),
+        child: Text(contentList[index].avatarString,
+            style: TextStyle(color: avatarForegroundColor)),
         backgroundColor: avatarBackgroundColor,
       );
       trailing = InkWell(
-          onTap: () => _launch(s.url),
+          // TODO figure out why this is taking over taps even if the appbar is over it
+          onTap: () => _launch(contentList[index].item.submission.url),
           child: Icon(
             Icons.keyboard_arrow_right,
           ));
     }
 
+    List<WidgetSpan> tagWidgets = contentList[index].matchingTags.map((tag) {
+      return WidgetSpan(
+          child: Badge(
+            shape: BadgeShape.square,
+            badgeColor: Theme.of(context).colorScheme.secondary,
+            borderRadius: BorderRadius.circular( 15.0 ),
+            badgeContent: Text( tag, style: TextStyle( fontSize: 10.0) ),
+            elevation: 0.0,
+            ),
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic);
+    }).toList();
+
     w = ListTile(
         leading: leading,
-        title: Text(title),
-        subtitle: Text(subtitle),
+        title: Text.rich(
+          TextSpan(
+              text: contentList[index].title, children: tagWidgets.toList()),
+        ),
+        subtitle: Text(contentList[index].subtitle),
         dense: true,
         trailing: trailing);
     w = Column(
@@ -269,13 +284,14 @@ class _ListingsPageState extends State<ListingsPage> {
   /// Launches the filter dialog
   _filter() async {
     logger.d('Filter main submissions list selected');
-    final result = await Navigator.pushNamed( context, '/filter', arguments: tags ) ;
-    logger.d( 'Filter dialog returned $result' ) ;
-    if( result != null ) {
+    final result =
+        await Navigator.pushNamed(context, '/filter', arguments: tags);
+    logger.d('Filter dialog returned $result');
+    if (result != null) {
       setState(() {
-        tags = result ;
+        tags = result;
       });
-      // Snackbar can't find a scaffold!?
+      // TODO Find out why Snackbar can't find a scaffold!
       // ScaffoldMessenger.of( context ).showSnackBar( const SnackBar(content: Text( 'New filters set'),)) ;
     }
   }
@@ -290,9 +306,65 @@ class _ListingsPageState extends State<ListingsPage> {
     }
   }
 
-
   void _authenticate(BuildContext context) {
     RedditClientCubit redditCubit = BlocProvider.of(context);
     redditCubit.authenticate();
   }
+}
+
+/// Holds a [SubmissionItem] and provides display facilities such as the
+/// title to be shown and whether it matches a filter highlight list
+class SubmissionWrapper {
+  static Logger logger = Logger();
+  final SubmissionItem item;
+  bool _hasMatch = false;
+  String _title;
+  String _avatarString;
+
+  String _subtitle;
+
+  List<String> _matchingTags = [];
+
+  SubmissionWrapper({this.item, List<String> tags = const []})
+      : assert(item != null) {
+    tags.forEach((tag) {
+      if (RegExp(tag).firstMatch(item.getTitle()) != null) {
+        _matchingTags.add(tag);
+        _hasMatch = true;
+      }
+    });
+
+    StringBuffer sb = StringBuffer();
+    _matchingTags.forEach((t) => sb.write(t + ' '));
+    sb.write(item
+        .getTitle()
+        .replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "")
+        .replaceAll(RegExp("^\\s*"), ""));
+    _title = sb.toString();
+
+    _subtitle =
+        '${item.getSubredditTitle()}: ${DateTimeFormatter.format(item.getTimestamp())}';
+
+    Set<PostType> postTypes = item.getPostTypes();
+    _avatarString = (postTypes.length == 0)
+        ? "?"
+        : postTypes
+            .map((p) => p.toShortString())
+            .reduce((value, element) => value + '/' + element);
+  }
+
+  /// The display title
+  String get title => _title;
+
+  /// Subreddit and posting time
+  String get subtitle => _subtitle;
+
+  /// B, S or T depending on the post type (i.e. buy, sell or trade)
+  String get avatarString => _avatarString;
+
+  /// Did any of the tags match?
+  bool get hasMatch => _hasMatch;
+
+  /// Which tags matched?
+  List<String> get matchingTags => _matchingTags;
 }

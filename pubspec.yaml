@@ -51,6 +51,9 @@ dependencies:
   ## Used for filter chips
   chips_choice: ^2.0.1
 
+  ## Used for the tags in lists to show matchces
+  badges: ^1.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

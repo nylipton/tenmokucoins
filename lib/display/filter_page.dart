@@ -8,7 +8,7 @@ import 'package:logger/logger.dart';
 
 class FilterPage extends StatefulWidget {
   static const title = 'Filter';
-  var tags ;
+  final tags ;
 
   @override
   _FilterPageState createState() => _FilterPageState(tags: tags);
@@ -18,6 +18,7 @@ class FilterPage extends StatefulWidget {
 
 class _FilterPageState extends State<FilterPage> {
   var logger = Logger();
+  // TODO add WTB, WTS, WTT as tags; make this a separate filter?
   final Map<String, List<String>> filterOptions = {
     "PM's": ["Silver", "Gold", "Paladium"],
     "PM Coins": [
