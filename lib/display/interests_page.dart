@@ -111,7 +111,8 @@ class _InterestsPageState extends State<InterestsPage> {
       "Modern Commem",
       "Key Date",
       "Semi-Key Date",
-      "CAC"
+      "CAC",
+      "Tone"
     ]
   };
 

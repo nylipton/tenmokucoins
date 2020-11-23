@@ -335,7 +335,7 @@ class SubmissionWrapper {
       : assert(item != null) {
     tags.forEach((tag) {
       RegExp regex = RegExp(tag, caseSensitive: false) ;
-      if (regex.firstMatch(item.getTitle()) !=null || regex.firstMatch(item.submission.body) != null ) {
+      if (regex.firstMatch(item.getTitle()) !=null || (item.submission.isSelf && regex.firstMatch(item.submission.selftext) != null )) {
         _matchingTags.add(tag);
         _hasMatch = true;
       }
