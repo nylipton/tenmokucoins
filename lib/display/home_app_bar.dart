@@ -26,7 +26,6 @@ class _HomeAppBarState extends State<HomeAppBar> {
     Widget w;
     if (Platform.isIOS) {
       w = CupertinoTabBar(
-
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.list_bullet),
@@ -52,7 +51,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
             BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
           ],
           currentIndex: _selectedIndex,
-          onTap: _onItemTapped
+          onTap: _onItemTapped,
+          // backgroundColor: Theme.of( context ).colorScheme.primary,
       );
     }
 

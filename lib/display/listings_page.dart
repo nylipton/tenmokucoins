@@ -145,6 +145,7 @@ class _ListingsPageState extends State<ListingsPage> {
           elevation: 1.0,
           title: Text(
             widget.title,
+            style: TextStyle(color: Theme.of( context ).colorScheme.onPrimary),
           ),
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
           pinned: false,
