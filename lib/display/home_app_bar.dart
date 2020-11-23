@@ -26,6 +26,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
     Widget w;
     if (Platform.isIOS) {
       w = CupertinoTabBar(
+
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.list_bullet),
@@ -38,18 +39,18 @@ class _HomeAppBarState extends State<HomeAppBar> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        activeColor: Theme.of(context).colorScheme.background,
-        inactiveColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: Theme.of(context).colorScheme.background,
+        activeColor: Theme.of(context).colorScheme.primaryVariant,
+        inactiveColor: Theme.of(context).colorScheme.onBackground,
       );
     } else {
       w = BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Posts'),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Posts'),
+            BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
+          ],
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped
       );
     }
 

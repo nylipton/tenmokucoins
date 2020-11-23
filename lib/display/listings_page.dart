@@ -100,11 +100,6 @@ class _ListingsPageState extends State<ListingsPage> {
     );
   }
 
-  void _authenticate(BuildContext context) {
-    RedditClientCubit redditCubit = BlocProvider.of(context);
-    redditCubit.authenticate();
-  }
-
   /// The main body of this page; this is the list that loads submissions (i.e
   /// posts or articles)
   Widget _getMainList(BuildContext context) {
@@ -113,24 +108,36 @@ class _ListingsPageState extends State<ListingsPage> {
       List<Widget> sliverlist = [];
 
       Widget appBar;
-      if (Platform.isIOS)
+      if (Platform.isIOS) {
         appBar = CupertinoSliverNavigationBar(
-          backgroundColor: Theme.of( context ).colorScheme.primary,
+            backgroundColor: Theme
+                .of(context)
+                .colorScheme
+                .primary,
             largeTitle: Text(widget.title),
-            trailing: IconButton(
-              icon: Icon(CupertinoIcons.slider_horizontal_3,
-                  color: Theme.of( context ).colorScheme.onPrimary),
-              tooltip: 'Filter posts',
-              onPressed: _filter,
+            trailing: Material(
+              color: Theme
+                  .of(context)
+                  .colorScheme
+                  .primary,
+              child: IconButton(
+                icon: Icon(CupertinoIcons.slider_horizontal_3,
+                    color: Theme
+                        .of(context)
+                        .colorScheme
+                        .onPrimary),
+                tooltip: 'Filter posts',
+                onPressed: _filter,
+              ),
             ));
-      else
+      } else {
         appBar = SliverAppBar(
           elevation: 1.0,
           title: Text(
             widget.title,
           ),
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-          pinned: true,
+          pinned: false,
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.filter_list),
@@ -148,7 +155,7 @@ class _ListingsPageState extends State<ListingsPage> {
             )
           ],
         );
-
+      }
       sliverlist.add(appBar);
 
       if (Platform.isIOS) {
@@ -254,9 +261,9 @@ class _ListingsPageState extends State<ListingsPage> {
     launch(shortlink.toString());
   }
 
-  // TODO implement filters
   void _filter() {
     logger.d('Filter main submissions list selected');
+    Navigator.pushNamed( context, '/filter' ) ;
   }
 
   /// For the overflow menu choice
@@ -267,5 +274,11 @@ class _ListingsPageState extends State<ListingsPage> {
     } else {
       logger.d('User chose to give feedback');
     }
+  }
+
+
+  void _authenticate(BuildContext context) {
+    RedditClientCubit redditCubit = BlocProvider.of(context);
+    redditCubit.authenticate();
   }
 }

@@ -1,13 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
+import 'package:tenmoku_coins/display/home_page.dart';
 
-import 'bloc/reddit_client_cubit.dart';
-import 'bloc/subreddit_cubit.dart';
-import 'display/listings_page.dart';
+import 'display/filter_page.dart';
 
 import 'package:flutter/cupertino.dart';
 
@@ -31,75 +30,86 @@ class MyApp extends StatelessWidget {
     ColorScheme tenmokuColorScheme = ColorScheme.light(
       background: Color(0xFFF4F1DE),
       onBackground: Color(0xFF3D405B),
-
       error: Colors.red,
       onError: Color(0xFF3D405B),
-
       primary: Color(0xFFE07A5F),
-      primaryVariant: Color(0xAAE07A5F),
-      onPrimary: Color(0xFF3D405B),
-
+      primaryVariant: Color(0xEEE07A5F),
+      onPrimary: Color(0xFFF4F1DE),
       secondary: Color(0xFF81B29A),
       secondaryVariant: Color(0xAA81B29A),
       onSecondary: Color(0xFF3D405B),
-
       surface: Color(0xFFF4F1DE),
       onSurface: Colors.black,
     );
 
     ThemeData theme = ThemeData.from(
-            colorScheme: tenmokuColorScheme,
-            textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme))
-        .copyWith(cupertinoOverrideTheme: NoDefaultCupertinoThemeData(
-
-    ));
+        colorScheme: tenmokuColorScheme,
+        textTheme: GoogleFonts.nunitoTextTheme(Theme
+            .of(context)
+            .textTheme))
+        .copyWith(cupertinoOverrideTheme: NoDefaultCupertinoThemeData());
 
     if (Platform.isIOS) {
-    //   MaterialBasedCupertinoThemeData cTheme =
-    //       MaterialBasedCupertinoThemeData(materialTheme: theme) ;
+      //   MaterialBasedCupertinoThemeData cTheme =
+      //       MaterialBasedCupertinoThemeData(materialTheme: theme) ;
       // .copyWith(
       //       barBackgroundColor: theme.colorScheme.primary,
       //       primaryContrastingColor: theme.colorScheme.onPrimary,
       // ) ;
 
       return Theme(
-        data: theme,
-        child: CupertinoApp(
-        title: 'Tenmoku Coins',
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<RedditClientCubit>(
-              create: (context) => RedditClientCubit(),
-            ),
-            BlocProvider<SubredditBloc>(create: (context) {
-              var bloc = SubredditBloc();
-              bloc.setRedditClientCubit(
-                  BlocProvider.of<RedditClientCubit>(context));
-              return bloc;
-            }),
-          ],
-          child: ListingsPage(title: 'Tenmoku Coins'),
-        ),
-      ) ) ;
+          data: theme,
+          child: CupertinoApp(
+            localizationsDelegates: [
+              DefaultMaterialLocalizations.delegate,
+              DefaultCupertinoLocalizations.delegate,
+              DefaultWidgetsLocalizations.delegate,
+            ],
+            title: 'Tenmoku Coins',
+            onGenerateRoute: (settings ) => Router.generateRoute( true, settings ),
+            initialRoute: Router.homeRoute,
+          ));
     } else {
       return MaterialApp(
         title: 'Tenmoku Coin Trader',
         theme: theme,
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<RedditClientCubit>(
-              create: (context) => RedditClientCubit(),
-            ),
-            BlocProvider<SubredditBloc>(create: (context) {
-              var bloc = SubredditBloc();
-              bloc.setRedditClientCubit(
-                  BlocProvider.of<RedditClientCubit>(context));
-              return bloc;
-            }),
-          ],
-          child: ListingsPage(title: 'Tenmoku Coin Trader'),
-        ),
+        onGenerateRoute: (settings ) => Router.generateRoute( false, settings ),
+        initialRoute: Router.homeRoute,
       );
     }
+  }
+}
+
+class Router {
+  static const String homeRoute = '/';
+  static const String filterRoute = '/filter';
+
+  static Route<dynamic> generateRoute(bool iOS, RouteSettings settings) {
+    PageRoute route;
+
+    switch (settings.name) {
+      case homeRoute:
+        if( iOS )
+          route = CupertinoPageRoute( builder: (_) => HomePage() ) ;
+        else
+          route = MaterialPageRoute(builder: (_) => HomePage());
+        break;
+      case filterRoute:
+        if( iOS )
+          route = CupertinoPageRoute(
+              fullscreenDialog: true, builder: (_) => FilterPage());
+        else
+          route = MaterialPageRoute(
+            fullscreenDialog: true, builder: (_) => FilterPage());
+        break;
+      default:
+        route = MaterialPageRoute(
+            builder: (_) =>
+                Scaffold(
+                  body: Center(
+                      child: Text('No route defined for ${settings.name}')),
+                ));
+    }
+    return route;
   }
 }
