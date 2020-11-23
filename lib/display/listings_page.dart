@@ -127,16 +127,17 @@ class _ListingsPageState extends State<ListingsPage> {
 
       Widget appBar;
       if (Platform.isIOS) {
+        /// TODO handle bug where tile catches onTap instead of app bar's action
         appBar = CupertinoSliverNavigationBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
             largeTitle: Text(widget.title),
             trailing: Material(
               color: Theme.of(context).colorScheme.primary,
               child: IconButton(
-                icon: Icon(CupertinoIcons.slider_horizontal_3,
+                icon: Icon(CupertinoIcons.exclamationmark_shield,
                     color: Theme.of(context).colorScheme.onPrimary),
-                tooltip: 'Filter posts',
-                onPressed: _filter,
+                tooltip: 'Interests',
+                onPressed: _highlight,
               ),
             ));
       } else {
@@ -150,8 +151,8 @@ class _ListingsPageState extends State<ListingsPage> {
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.filter_list),
-              tooltip: 'Filter posts',
-              onPressed: _filter,
+              tooltip: 'Interests',
+              onPressed: _highlight,
             ),
             PopupMenuButton<String>(
               onSelected: _choiceAction,
@@ -233,10 +234,11 @@ class _ListingsPageState extends State<ListingsPage> {
             style: TextStyle(color: avatarForegroundColor)),
         backgroundColor: avatarBackgroundColor,
       );
-      trailing = InkWell(
+      trailing = GestureDetector(
+        behavior: HitTestBehavior.opaque,
           // TODO figure out why this is taking over taps even if the appbar is over it
           onTap: () => _launch(contentList[index].item.submission.url),
-          child: Icon(
+        child: Icon(
             Icons.keyboard_arrow_right,
           ));
     }
@@ -246,10 +248,10 @@ class _ListingsPageState extends State<ListingsPage> {
           child: Badge(
             shape: BadgeShape.square,
             badgeColor: Theme.of(context).colorScheme.secondary,
-            borderRadius: BorderRadius.circular( 15.0 ),
-            badgeContent: Text( tag, style: TextStyle( fontSize: 10.0) ),
+            borderRadius: BorderRadius.circular(15.0),
+            badgeContent: Text(tag, style: TextStyle(fontSize: 10.0)),
             elevation: 0.0,
-            ),
+          ),
           alignment: PlaceholderAlignment.baseline,
           baseline: TextBaseline.alphabetic);
     }).toList();
@@ -258,11 +260,14 @@ class _ListingsPageState extends State<ListingsPage> {
         leading: leading,
         title: Text.rich(
           TextSpan(
-              text: contentList[index].title, children: tagWidgets.toList()),
+              text: contentList[index].title+' ',
+              children: tagWidgets.toList()),
         ),
         subtitle: Text(contentList[index].subtitle),
         dense: true,
         trailing: trailing);
+
+    /// the column is to include a divider
     w = Column(
       children: [
         w,
@@ -281,8 +286,8 @@ class _ListingsPageState extends State<ListingsPage> {
     launch(shortlink.toString());
   }
 
-  /// Launches the filter dialog
-  _filter() async {
+  /// Launches the filter dialog to get the tags
+  _highlight() async {
     logger.d('Filter main submissions list selected');
     final result =
         await Navigator.pushNamed(context, '/filter', arguments: tags);
@@ -328,7 +333,8 @@ class SubmissionWrapper {
   SubmissionWrapper({this.item, List<String> tags = const []})
       : assert(item != null) {
     tags.forEach((tag) {
-      if (RegExp(tag).firstMatch(item.getTitle()) != null) {
+      if (RegExp(tag, caseSensitive: false).firstMatch(item.getTitle()) !=
+          null) {
         _matchingTags.add(tag);
         _hasMatch = true;
       }
@@ -339,7 +345,8 @@ class SubmissionWrapper {
     sb.write(item
         .getTitle()
         .replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "")
-        .replaceAll(RegExp("^\\s*"), ""));
+        .replaceAll(RegExp("^\\s*"), "")
+        .replaceAll(RegExp("&amp;"), "&"));
     _title = sb.toString();
 
     _subtitle =

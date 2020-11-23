@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/display/home_page.dart';
 
-import 'display/filter_page.dart';
+import 'display/interests_page.dart';
 
 import 'package:flutter/cupertino.dart';
 
@@ -98,10 +98,10 @@ class Router {
         var tags = settings.arguments ;
         if( iOS )
           route = CupertinoPageRoute(
-              fullscreenDialog: true, builder: (_) => FilterPage(tags: tags));
+              fullscreenDialog: true, builder: (_) => InterestsPage(tags: tags));
         else
           route = MaterialPageRoute(
-            fullscreenDialog: true, builder: (_) => FilterPage());
+            fullscreenDialog: true, builder: (_) => InterestsPage());
         break;
       default:
         route = MaterialPageRoute(

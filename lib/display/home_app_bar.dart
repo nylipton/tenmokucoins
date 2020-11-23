@@ -32,8 +32,10 @@ class _HomeAppBarState extends State<HomeAppBar> {
             icon: Icon(CupertinoIcons.list_bullet),
             label: 'Posts',
           ),
+          /// TODO implement messages
           BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.conversation_bubble), label: 'Messages'),
+          /// TODO implement more dialog with login and feedback
           BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.ellipsis_circle), label: 'More'),
         ],

@@ -6,17 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:chips_choice/chips_choice.dart';
 import 'package:logger/logger.dart';
 
-class FilterPage extends StatefulWidget {
-  static const title = 'Filter';
+class InterestsPage extends StatefulWidget {
+  static const title = 'Interests';
   final tags ;
 
   @override
-  _FilterPageState createState() => _FilterPageState(tags: tags);
+  _InterestsPageState createState() => _InterestsPageState(tags: tags);
 
-  FilterPage({this.tags});
+  InterestsPage({this.tags});
 }
 
-class _FilterPageState extends State<FilterPage> {
+class _InterestsPageState extends State<InterestsPage> {
   var logger = Logger();
   // TODO add WTB, WTS, WTT as tags; make this a separate filter?
   final Map<String, List<String>> filterOptions = {
@@ -118,7 +118,7 @@ class _FilterPageState extends State<FilterPage> {
   /// The applied tags (i.e. the selected chips)
   List<String> tags = [];
 
-  _FilterPageState({this.tags});
+  _InterestsPageState({this.tags});
 
   @override
   void initState() {
@@ -147,7 +147,7 @@ class _FilterPageState extends State<FilterPage> {
           backgroundColor: Theme.of(context).colorScheme.primary,
           actionsForegroundColor: Theme.of(context).colorScheme.onPrimary,
           middle: Text(
-            FilterPage.title,
+            InterestsPage.title,
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
@@ -156,7 +156,7 @@ class _FilterPageState extends State<FilterPage> {
     } else { // Material implementation
       w = Scaffold(
         appBar: AppBar(
-          title: Text(FilterPage.title),
+          title: Text(InterestsPage.title),
           actions: [
             FlatButton(
               child: Text(
