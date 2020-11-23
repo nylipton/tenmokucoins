@@ -150,7 +150,7 @@ class _ListingsPageState extends State<ListingsPage> {
           pinned: false,
           actions: <Widget>[
             IconButton(
-              icon: const Icon(Icons.filter_list),
+              icon: const Icon(Icons.rule),
               tooltip: 'Interests',
               onPressed: _highlight,
             ),
