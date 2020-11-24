@@ -20,7 +20,7 @@ import 'package:equatable/equatable.dart';
 class RedditClientCubit extends Cubit<RedditWrapper> {
   final logger = Logger();
   RedditWrapper _redditWrapper;
-  String userAgentId = 'tenmokucoins';
+  static const userAgentId = 'tenmokucoins';
   Reddit _tempReddit ;
 
   /// stream of deep-link listener updates, for getting OAuth authorization code
