@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 class HomeAppBar extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class HomeAppBar extends StatefulWidget {
 
 // TODO implement CupertinoTabBar for iOS
 class _HomeAppBarState extends State<HomeAppBar> {
+  final logger = Logger();
   /// The selected home navigation item
   int _selectedIndex;
 
@@ -63,6 +65,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
     setState(() {
       _selectedIndex = index;
     });
-    // if( inde
+    if( index == 2 ) { // iOS "more"
+      
+    }
   }
 }

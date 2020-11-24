@@ -54,6 +54,9 @@ dependencies:
   ## Used for the tags in lists to show matchces
   badges: ^1.1.4
 
+  ## Wraps platform-specific persistent storage for simple data
+  shared_preferences: <2.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

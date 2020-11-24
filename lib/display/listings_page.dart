@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -43,15 +44,29 @@ class _ListingsPageState extends State<ListingsPage> {
   static const List<String> overflowMenu = [accounts, feedback];
 
   /// tags are used as filters for the list (or highlights, depending on implementation)
-  List<String> tags;
+  List<String> _tags = [];
+
+  SharedPreferences _prefs;
+
+  /// key used in shared_preferences
+  static const tagsKey = 'user_tags';
+
+  Future<SharedPreferences> _futureprefs = SharedPreferences.getInstance();
 
   @override
   void initState() {
     super.initState();
+
+    // _tags = await _futureprefs.then( ( SharedPreferences prefs ) => return prefs.getStringList( 'user_tags'
+    _futureprefs.then((prefs) => _prefs = prefs).then((_) {
+      setState(() {
+        _tags = _prefs.getStringList('user_tags') ?? [];
+        logger.d('Loaded tags from memory: $_tags');
+      });
+    });
+
     _isLoading = false;
 
-    /// TODO store tags locally on the device
-    tags = [];
     BlocProvider.of<SubredditBloc>(context).listen((state) {
       setState(() {
         _isLoading = (state is SubredditListLoadingState);
@@ -112,7 +127,7 @@ class _ListingsPageState extends State<ListingsPage> {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
       List<SubmissionWrapper> listWrappers = state.submissions
-          .map((s) => SubmissionWrapper(item: s, tags: tags))
+          .map((s) => SubmissionWrapper(item: s, tags: _tags))
           .toList(growable: false);
       // listWrappers.sort((a, b) {
       //   int aMatches = a.matchingTags.length;
@@ -145,7 +160,7 @@ class _ListingsPageState extends State<ListingsPage> {
           elevation: 1.0,
           title: Text(
             widget.title,
-            style: TextStyle(color: Theme.of( context ).colorScheme.onPrimary),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
           pinned: false,
@@ -236,10 +251,10 @@ class _ListingsPageState extends State<ListingsPage> {
         backgroundColor: avatarBackgroundColor,
       );
       trailing = GestureDetector(
-        behavior: HitTestBehavior.opaque,
+          behavior: HitTestBehavior.opaque,
           // TODO figure out why this is taking over taps even if the appbar is over it
           onTap: () => _launch(contentList[index].item.submission.url),
-        child: Icon(
+          child: Icon(
             Icons.keyboard_arrow_right,
           ));
     }
@@ -247,11 +262,12 @@ class _ListingsPageState extends State<ListingsPage> {
     List<WidgetSpan> tagWidgets = contentList[index].matchingTags.map((tag) {
       return WidgetSpan(
           child: Badge(
-            padding: EdgeInsets.fromLTRB(3,0,3,0),
+            padding: EdgeInsets.fromLTRB(3, 0, 3, 0),
             shape: BadgeShape.square,
             badgeColor: Theme.of(context).colorScheme.secondary,
             borderRadius: BorderRadius.circular(15.0),
-            badgeContent: Text(tag, style: Theme.of( context ).textTheme.bodyText1),
+            badgeContent:
+                Text(tag, style: Theme.of(context).textTheme.bodyText1),
             elevation: 0.0,
           ),
           alignment: PlaceholderAlignment.baseline,
@@ -262,7 +278,7 @@ class _ListingsPageState extends State<ListingsPage> {
         leading: leading,
         title: Text.rich(
           TextSpan(
-              text: contentList[index].title+' ',
+              text: contentList[index].title + ' ',
               children: tagWidgets.toList()),
         ),
         subtitle: Text(contentList[index].subtitle),
@@ -292,12 +308,16 @@ class _ListingsPageState extends State<ListingsPage> {
   _highlight() async {
     logger.d('Filter main submissions list selected');
     final result =
-        await Navigator.pushNamed(context, '/filter', arguments: tags);
+        await Navigator.pushNamed(context, '/filter', arguments: _tags);
     logger.d('Filter dialog returned $result');
     if (result != null) {
       setState(() {
-        tags = result;
+        _tags = result;
       });
+
+      _prefs
+          .setStringList(tagsKey, result)
+          .then((t) => logger.d('Saved updated tags: $_tags'));
       // TODO Find out why Snackbar can't find a scaffold!
       // ScaffoldMessenger.of( context ).showSnackBar( const SnackBar(content: Text( 'New filters set'),)) ;
     }
@@ -335,15 +355,16 @@ class SubmissionWrapper {
   SubmissionWrapper({this.item, List<String> tags = const []})
       : assert(item != null) {
     tags.forEach((tag) {
-      RegExp regex = RegExp(tag, caseSensitive: false) ;
-      if (regex.firstMatch(item.getTitle()) !=null || (item.submission.isSelf && regex.firstMatch(item.submission.selftext) != null )) {
+      RegExp regex = RegExp(tag, caseSensitive: false);
+      if (regex.firstMatch(item.getTitle()) != null ||
+          (item.submission.isSelf &&
+              regex.firstMatch(item.submission.selftext) != null)) {
         _matchingTags.add(tag);
         _hasMatch = true;
       }
     });
 
     StringBuffer sb = StringBuffer();
-    _matchingTags.forEach((t) => sb.write(t + ' '));
     sb.write(item
         .getTitle()
         .replaceAll(RegExp("\\[[Ww][Tt][bBsStT]\\][\s\\\/\,]*"), "")
