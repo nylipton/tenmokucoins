@@ -149,7 +149,7 @@ class _ListingsPageState extends State<ListingsPage> {
             trailing: Material(
               color: Theme.of(context).colorScheme.primary,
               child: IconButton(
-                icon: Icon(CupertinoIcons.exclamationmark_shield,
+                icon: Icon(CupertinoIcons.heart_circle,
                     color: Theme.of(context).colorScheme.onPrimary),
                 tooltip: 'Interests',
                 onPressed: _highlight,
