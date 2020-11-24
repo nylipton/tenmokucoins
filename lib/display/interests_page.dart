@@ -8,7 +8,7 @@ import 'package:logger/logger.dart';
 
 class InterestsPage extends StatefulWidget {
   static const title = 'Interests';
-  final tags ;
+  final tags;
 
   @override
   _InterestsPageState createState() => _InterestsPageState(tags: tags);
@@ -18,9 +18,10 @@ class InterestsPage extends StatefulWidget {
 
 class _InterestsPageState extends State<InterestsPage> {
   var logger = Logger();
+
   // TODO add WTB, WTS, WTT as tags; make this a separate filter?
   final Map<String, List<String>> filterOptions = {
-    "PM's": ["Silver", "Gold", "Paladium"],
+    "PM's": ["Silver", "Gold", "Platinum", "Paladium"],
     "PM Coins": [
       "Maple",
       "Sovereign",
@@ -30,12 +31,13 @@ class _InterestsPageState extends State<InterestsPage> {
       "Rounds",
       "Aztec",
       "Libertad",
+      "Onza",
       "Queens Beast",
       "Australia Lunar",
       "5oz ATB",
       "World Silver",
-      "Krugerand"
-          "Junk"
+      "Krugerand",
+      "Junk"
     ],
     "PM Other": [
       "Valcambi",
@@ -47,8 +49,8 @@ class _InterestsPageState extends State<InterestsPage> {
       "Goldback",
       "Scrap",
       "Englehard",
-      "Scottsdale"
-          "10K",
+      "Scottsdale",
+      "10K",
       "14K",
       "18K",
       "999",
@@ -56,6 +58,7 @@ class _InterestsPageState extends State<InterestsPage> {
       "99999",
       "925",
       "90%",
+      "Sterling",
       "Bracelet",
       "Jewlry",
       "Earing",
@@ -123,9 +126,8 @@ class _InterestsPageState extends State<InterestsPage> {
 
   @override
   void initState() {
-    super.initState() ;
-    if( tags == null )
-      tags = [] ;
+    super.initState();
+    if (tags == null) tags = [];
   }
 
   @override
@@ -140,11 +142,10 @@ class _InterestsPageState extends State<InterestsPage> {
           //   child: Icon( CupertinoIcons.xmark, color: Theme.of( context ).colorScheme.onBackground,)
           // ),
           trailing: GestureDetector(
-            child: Text('Save',
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-            onTap: () => _save()
-          ),
+              child: Text('Save',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)),
+              onTap: () => _save()),
           backgroundColor: Theme.of(context).colorScheme.primary,
           actionsForegroundColor: Theme.of(context).colorScheme.onPrimary,
           middle: Text(
@@ -154,7 +155,8 @@ class _InterestsPageState extends State<InterestsPage> {
         ),
         child: _filterForm(),
       );
-    } else { // Material implementation
+    } else {
+      // Material implementation
       w = Scaffold(
         appBar: AppBar(
           title: Text(InterestsPage.title),
@@ -212,7 +214,7 @@ class _InterestsPageState extends State<InterestsPage> {
   void _save() {
     logger.d('Saving new filter settings: $tags');
     // TODO save the new filters to a bloc
-    Navigator.pop( context, tags ) ;
+    Navigator.pop(context, tags);
   }
 }
 
