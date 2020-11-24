@@ -4,10 +4,8 @@ An app for coin collectors. This will connect to Reddit and other forums where c
 bought and sold.
 
 ## Todo list before 1.0 launch
-- Add filters
 - Update IA and navigation (filters, forum login)
 - Reauthenticate automatically to Reddit
-- Save settings (firebase? local keystore?)
 - Include spot price check for PMs
 - Include lookups for coin comps
 - Include communications back to original poster; include direction to login to non-authenticated users when necessary
@@ -25,3 +23,5 @@ bought and sold.
 - Include infinite scrolling
 - Update styling
 - Added real logging
+- Save preferred tags on device
+- Add filters
