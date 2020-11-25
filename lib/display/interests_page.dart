@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -22,21 +20,20 @@ class InterestsPage extends StatelessWidget {
   /// this field is only used to initialize the [TagsCubit].
   final _tags;
 
-  InterestsPage(this._tags): assert (_tags != null) {
+  InterestsPage(this._tags) : assert(_tags != null) {
     // Find all of the custom tags and put them in the [customGroup]
-    List<String> tmpTags = [..._tags] ; // make a copy
-    interestOptions.keys.forEach( (group) {
-      _tags.forEach( (tag ) {
-        if( interestOptions[group].contains(tag) )
-          tmpTags.remove( tag ) ;
-      } ) ;
-    }) ;
-    tmpTags.sort() ;
-    interestOptions[customGroup] = tmpTags ;
+    List<String> tmpTags = [..._tags]; // make a copy
+    interestOptions.keys.forEach((group) {
+      _tags.forEach((tag) {
+        if (interestOptions[group].contains(tag)) tmpTags.remove(tag);
+      });
+    });
+    tmpTags.sort();
+    interestOptions[customGroup] = tmpTags;
   }
 
   // TODO add WTB, WTS, WTT as tags; make this a separate filter?
-  Map<String, List<String>> interestOptions = {
+  final Map<String, List<String>> interestOptions = {
     customGroup: [],
     "PM's": ["Silver", "Gold", "Platinum", "Paladium"],
     "PM Coins": [
@@ -288,7 +285,7 @@ class _ContentState extends State<Content>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
+    var _formKey = GlobalKey<FormState>();
     return Material(
       child: Card(
         elevation: 2,
@@ -299,18 +296,34 @@ class _ContentState extends State<Content>
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.fromLTRB( 15,10,15,0),
               child: Text(
                 widget.title,
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
             if (widget.title == customGroup)
-              TextField(
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(), labelText: 'Custom search'),
-                onSubmitted: (name) => addTag(context, name),
-              ),
+              Form(
+                  key: _formKey,
+                  child: Container(
+                      padding: const EdgeInsets.fromLTRB( 15,0,15,0),
+                      child:TextFormField(
+                    minLines: 1,
+                    maxLines: 1,
+                    validator: (val) {
+                      return (tagExists(context, val)
+                          ? 'This interest tag is already defined'
+                          : null);
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      // contentPadding: const EdgeInsets.fromLTRB( 15,0,15,0),
+                      hintText: 'Custom tag',
+                    ),
+                    onFieldSubmitted: (v) => _formKey.currentState.validate()
+                        ? addTag(context, v)
+                        : null,
+                  ))),
             Flexible(fit: FlexFit.loose, child: widget.child),
           ],
         ),
@@ -319,7 +332,11 @@ class _ContentState extends State<Content>
   }
 
   addTag(BuildContext context, String name) {
-    bool added = BlocProvider.of<TagsCubit>(context).add(name);
+    BlocProvider.of<TagsCubit>(context).add(name);
+  }
+
+  bool tagExists(context, String name) {
+    return BlocProvider.of<InterestOptionsCubit>(context).hasTag(name);
   }
 }
 
@@ -330,7 +347,11 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
         super(state);
 
   /// Note: makes a deep copy
-  set(Map<String, List<String>> val) => emit(json.decode(json.encode(val)));
+  set(Map<String, List<String>> val) {
+    Map<String, List<String>> newMap = {};
+    state.keys.forEach((group) => newMap[group] = [...state[group]]);
+    emit(newMap);
+  }
 
   /// Adds the given tag, if it wasn't already in it. Adds the group if it isn't
   /// already there
@@ -339,8 +360,19 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
     assert(state != null);
     if (state[group] == null) state[group] = <String>[];
 
-    if (!state[group].contains(tag)) state[group].add(tag);
-    set(state);
+    if (!hasTag(tag)) {
+      if (!state[group].contains(tag)) state[group].add(tag);
+      set(state);
+    }
+  }
+
+  /// returns if this tag is already defined anywhere
+  bool hasTag(String name) {
+    assert(name != null);
+    bool exists = false;
+    state.keys.forEach((key) => state[key].forEach((val) =>
+        exists = (val.toLowerCase() == name.toLowerCase()) ? true : exists));
+    return exists;
   }
 }
 
@@ -361,12 +393,11 @@ class TagsCubit extends Cubit<List<String>> {
     bool success;
     if (!state.contains(name)) {
       emit([name, ...state]);
+      _interestOptionsCubit.add(tag: name);
       success = true;
     } else {
       success = false;
     }
-
-    _interestOptionsCubit.add(tag: name);
 
     logger.d(
         'User added $name as a tag ${success ? 'successfully' : 'unsuccessfully'}');

@@ -57,6 +57,9 @@ dependencies:
   ## Wraps platform-specific persistent storage for simple data
   shared_preferences: <2.0.0
 
+  ## cross-platform widgets
+  flutter_platform_widgets: ^0.71.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
