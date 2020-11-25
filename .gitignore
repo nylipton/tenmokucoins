@@ -47,3 +47,4 @@ app.*.map.json
 
 # Project-specific
 /lib/bloc/reddit_oauth.dart
+/reddit_data_analysis.csv
