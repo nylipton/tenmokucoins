@@ -84,23 +84,16 @@ class _ListingsPageState extends State<ListingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-            BlocBuilder<RedditClientCubit, RedditWrapper>(
-                builder: (context, redditWrapper) {
-              logger.v('BlocBuilder called with $redditWrapper');
-              Widget w;
-              if (redditWrapper == null || redditWrapper.reddit == null)
-                w = Center(
-                    child: PlatformCircularProgressIndicator());
-              else
-                w = Expanded(child: _getMainList(context));
-              return w;
-            }),
-          ])),
+      body: BlocBuilder<RedditClientCubit, RedditWrapper>(
+          builder: (context, redditWrapper) {
+        logger.v('BlocBuilder called with $redditWrapper');
+        return Stack(fit: StackFit.expand, children: <Widget>[
+          _getMainList(context),
+          (redditWrapper == null || redditWrapper.reddit == null)
+              ? PlatformCircularProgressIndicator()
+              : Container()
+        ]);
+      }),
       bottomNavigationBar: HomeAppBar(),
     );
   }
@@ -208,9 +201,8 @@ class _ListingsPageState extends State<ListingsPage> {
     } else if (index == contentList.length) {
       return Center(
           child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: PlatformCircularProgressIndicator()
-      ));
+              padding: const EdgeInsets.all(8),
+              child: PlatformCircularProgressIndicator()));
     } else {
       Color avatarBackgroundColor = contentList[index].hasMatch
           ? Theme.of(context).colorScheme.secondary
