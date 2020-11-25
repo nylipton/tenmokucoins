@@ -98,10 +98,10 @@ class Router {
         var tags = settings.arguments ;
         if( iOS )
           route = CupertinoPageRoute(
-              fullscreenDialog: true, builder: (_) => InterestsPage(tags: tags));
+              fullscreenDialog: true, builder: (_) => InterestsPage(tags));
         else
           route = MaterialPageRoute(
-            fullscreenDialog: true, builder: (_) => InterestsPage());
+            fullscreenDialog: true, builder: (_) => InterestsPage(tags));
         break;
       default:
         route = MaterialPageRoute(

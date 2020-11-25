@@ -5,6 +5,7 @@ bought and sold.
 
 ## Todo list before 1.0 launch
 - Update IA and navigation (filters, forum login)
+- Add favorites
 - Reauthenticate automatically to Reddit
 - Include spot price check for PMs
 - Include lookups for coin comps

@@ -25,7 +25,7 @@ dependencies:
     sdk: flutter
   ## draw is the redit API wrapper
   draw: ^0.9.1
-  google_fonts: ^0.3.9
+  google_fonts: ^1.1.1
   ## dio is an http client for dart
   dio: ^3.0.10
 

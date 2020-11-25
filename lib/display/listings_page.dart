@@ -57,7 +57,6 @@ class _ListingsPageState extends State<ListingsPage> {
   void initState() {
     super.initState();
 
-    // _tags = await _futureprefs.then( ( SharedPreferences prefs ) => return prefs.getStringList( 'user_tags'
     _futureprefs.then((prefs) => _prefs = prefs).then((_) {
       setState(() {
         _tags = _prefs.getStringList('user_tags') ?? [];
@@ -104,20 +103,6 @@ class _ListingsPageState extends State<ListingsPage> {
             }),
           ])),
       bottomNavigationBar: HomeAppBar(),
-      // floatingActionButton: BlocBuilder<RedditClientCubit, RedditWrapper>(
-      //     builder: (_, redditWrapper) {
-      //   Widget w;
-      //   if (redditWrapper != null && redditWrapper.isAuthenticated())
-      //     w = Container();
-      //   else
-      //     w = FloatingActionButton(
-      //       onPressed: () => _authenticate(context),
-      //       tooltip: 'Authenticate to Reddit',
-      //       child: _isLoading ? Icon(Icons.stream) : Icon(Icons.login),
-      //     );
-      //   return w;
-      // }
-      // )
     );
   }
 
@@ -129,14 +114,6 @@ class _ListingsPageState extends State<ListingsPage> {
       List<SubmissionWrapper> listWrappers = state.submissions
           .map((s) => SubmissionWrapper(item: s, tags: _tags))
           .toList(growable: false);
-      // listWrappers.sort((a, b) {
-      //   int aMatches = a.matchingTags.length;
-      //   int bMatches = b.matchingTags.length;
-      //   if (aMatches == bMatches)
-      //     return a.item.getTimestamp().compareTo(b.item.getTimestamp());
-      //   else
-      //     return a.matchingTags.length.compareTo(b.matchingTags.length);
-      // });
 
       List<Widget> sliverlist = [];
 

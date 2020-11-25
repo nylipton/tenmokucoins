@@ -1,11 +1,8 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:draw/draw.dart';
 import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
 
 // import 'package:flutter_test/flutter_test.dart';
 import 'package:test/test.dart';
-import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
-import 'package:uuid/uuid.dart';
 
 const userAgentId = 'tenmokucoins';
 
