@@ -87,12 +87,15 @@ class _ListingsPageState extends State<ListingsPage> {
       body: BlocBuilder<RedditClientCubit, RedditWrapper>(
           builder: (context, redditWrapper) {
         logger.v('BlocBuilder called with $redditWrapper');
-        return Stack(fit: StackFit.expand, children: <Widget>[
-          _getMainList(context),
-          (redditWrapper == null || redditWrapper.reddit == null)
-              ? PlatformCircularProgressIndicator()
-              : Container()
-        ]);
+        return Stack(
+            fit: StackFit.expand,
+            alignment: AlignmentDirectional.center,
+            children: <Widget>[
+              _getMainList(context),
+              (redditWrapper == null || redditWrapper.reddit == null)
+                  ? PlatformCircularProgressIndicator()
+                  : Container()
+            ]);
       }),
       bottomNavigationBar: HomeAppBar(),
     );
