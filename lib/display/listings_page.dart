@@ -10,6 +10,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
+import 'package:tenmoku_coins/display/navigation_index_cubit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'DateTimeFormatter.dart';
@@ -87,15 +88,30 @@ class _ListingsPageState extends State<ListingsPage> {
       body: BlocBuilder<RedditClientCubit, RedditWrapper>(
           builder: (context, redditWrapper) {
         logger.v('BlocBuilder called with $redditWrapper');
-        return Stack(
-            fit: StackFit.expand,
-            alignment: AlignmentDirectional.center,
-            children: <Widget>[
-              _getMainList(context),
-              (redditWrapper == null || redditWrapper.reddit == null)
-                  ? PlatformCircularProgressIndicator()
-                  : Container()
-            ]);
+
+        return BlocBuilder<NavigationIndexCubit, int>(
+            builder: (context, index) {
+              logger.v( 'index set to $index' ) ;
+
+              Widget main ;
+              if( index == 0 )
+                main = _getMainList( context ) ;
+              else if( index == 1 )
+                main = Center( child: Text( 'messages' ) ) ;
+              else if( index == 2 )
+                main = Center( child: Text( 'more' ) ) ;
+              else
+                logger.e( 'Navigation index set to $index' ) ;
+          return Stack(
+              fit: StackFit.expand,
+              alignment: AlignmentDirectional.center,
+              children: <Widget>[
+                main,
+                (redditWrapper == null || redditWrapper.reddit == null)
+                    ? PlatformCircularProgressIndicator()
+                    : Container()
+              ]);
+        });
       }),
       bottomNavigationBar: HomeAppBar(),
     );

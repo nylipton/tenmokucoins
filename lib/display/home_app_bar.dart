@@ -2,71 +2,56 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 
-class HomeAppBar extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() {
-    return _HomeAppBarState();
-  }
-}
+import 'navigation_index_cubit.dart';
 
-// TODO implement CupertinoTabBar for iOS
-class _HomeAppBarState extends State<HomeAppBar> {
+class HomeAppBar extends StatelessWidget {
   final logger = Logger();
-  /// The selected home navigation item
-  int _selectedIndex;
-
-  @override
-  void initState() {
-    _selectedIndex = 0;
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
-    Widget w;
-    if (Platform.isIOS) {
-      w = CupertinoTabBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.list_bullet),
-            label: 'Posts',
-          ),
-          /// TODO implement messages
-          BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.conversation_bubble), label: 'Messages'),
-          /// TODO implement more dialog with login and feedback
-          BottomNavigationBarItem(
-              icon: Icon(CupertinoIcons.ellipsis_circle), label: 'More'),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Theme.of(context).colorScheme.background,
-        activeColor: Theme.of(context).colorScheme.primaryVariant,
-        inactiveColor: Theme.of(context).colorScheme.onBackground,
-      );
-    } else {
-      w = BottomNavigationBar(
+    return BlocBuilder<NavigationIndexCubit, int>(builder: (context, index) {
+      Widget w;
+      if (Platform.isIOS) {
+        w = CupertinoTabBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.list_bullet),
+              label: 'Posts',
+            ),
+
+            /// TODO implement messages
+            BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.conversation_bubble),
+                label: 'Messages'),
+
+            /// TODO implement more dialog with login and feedback
+            BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.ellipsis_circle), label: 'More'),
+          ],
+          currentIndex: index,
+          onTap: (index) =>
+              BlocProvider.of<NavigationIndexCubit>(context).setIndex(index),
+          backgroundColor: Theme.of(context).colorScheme.background,
+          activeColor: Theme.of(context).colorScheme.primaryVariant,
+          inactiveColor: Theme.of(context).colorScheme.onBackground,
+        );
+      } else {
+        w = BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Posts'),
-            BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.message), label: 'Messages'),
           ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
+          currentIndex: index,
+          onTap: (index) =>
+              BlocProvider.of<NavigationIndexCubit>(context).setIndex(index),
           // backgroundColor: Theme.of( context ).colorScheme.primary,
-      );
-    }
-
-    return w;
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
+        );
+      }
+      return w;
     });
-    if( index == 2 ) { // iOS "more"
-      
-    }
   }
 }
