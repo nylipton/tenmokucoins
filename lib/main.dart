@@ -23,31 +23,46 @@ class MyApp extends StatelessWidget {
     Logger.level = Level.debug;
   }
 
-  // This widget is the root of your application.
+  static const lightColor = Color(0xFFF4F1DE);
+
+  static const darkColor = Color(0xFF3D405B);
+  static const error = Colors.red;
+
+  static const primary = Color(0xFFE07A5F);
+
+  static const primaryVariant = Color(0xEEE07A5F);
+
+  static const secondary = Color(0xFF81B29A);
+
+  static const secondaryVariant = Color(0xAA81B29A);
+
   @override
   Widget build(BuildContext context) {
     // Theme colors from https://coolors.co/f4f1de-e07a5f-3d405b-81b29a-f2cc8f
     ColorScheme tenmokuColorScheme = ColorScheme.light(
-      background: Color(0xFFF4F1DE),
-      onBackground: Color(0xFF3D405B),
-      error: Colors.red,
-      onError: Color(0xFF3D405B),
-      primary: Color(0xFFE07A5F),
-      primaryVariant: Color(0xEEE07A5F),
-      onPrimary: Color(0xFFF4F1DE),
-      secondary: Color(0xFF81B29A),
-      secondaryVariant: Color(0xAA81B29A),
-      onSecondary: Color(0xFF3D405B),
-      surface: Color(0xFFF4F1DE),
+      background: lightColor,
+      onBackground: darkColor,
+      error: error,
+      onError: darkColor,
+      primary: primary,
+      primaryVariant: primaryVariant,
+      onPrimary: lightColor,
+      secondary: secondary,
+      secondaryVariant: secondaryVariant,
+      onSecondary: darkColor,
+      surface: lightColor,
       onSurface: Colors.black,
     );
 
     ThemeData theme = ThemeData.from(
-        colorScheme: tenmokuColorScheme,
-        textTheme: GoogleFonts.nunitoTextTheme(Theme
-            .of(context)
-            .textTheme))
-        .copyWith(cupertinoOverrideTheme: NoDefaultCupertinoThemeData());
+      colorScheme: tenmokuColorScheme,
+      textTheme: GoogleFonts.nunitoTextTheme(Theme.of(context).textTheme),
+    ).copyWith(
+        cupertinoOverrideTheme: NoDefaultCupertinoThemeData(),
+        appBarTheme: AppBarTheme(
+            color: primary,
+            textTheme:
+                GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)));
 
     if (Platform.isIOS) {
       //   MaterialBasedCupertinoThemeData cTheme =
@@ -66,14 +81,14 @@ class MyApp extends StatelessWidget {
               DefaultWidgetsLocalizations.delegate,
             ],
             title: 'Tenmoku Coins',
-            onGenerateRoute: (settings ) => Router.generateRoute( true, settings ),
+            onGenerateRoute: (settings) => Router.generateRoute(true, settings),
             initialRoute: Router.homeRoute,
           ));
     } else {
       return MaterialApp(
         title: 'Tenmoku Coin Trader',
         theme: theme,
-        onGenerateRoute: (settings ) => Router.generateRoute( false, settings ),
+        onGenerateRoute: (settings) => Router.generateRoute(false, settings),
         initialRoute: Router.homeRoute,
       );
     }
@@ -89,24 +104,23 @@ class Router {
 
     switch (settings.name) {
       case homeRoute:
-        if( iOS )
-          route = CupertinoPageRoute( builder: (_) => HomePage() ) ;
+        if (iOS)
+          route = CupertinoPageRoute(builder: (_) => HomePage());
         else
           route = MaterialPageRoute(builder: (_) => HomePage());
         break;
       case filterRoute:
-        var tags = settings.arguments ;
-        if( iOS )
+        var tags = settings.arguments;
+        if (iOS)
           route = CupertinoPageRoute(
               fullscreenDialog: true, builder: (_) => InterestsPage(tags));
         else
           route = MaterialPageRoute(
-            fullscreenDialog: true, builder: (_) => InterestsPage(tags));
+              fullscreenDialog: true, builder: (_) => InterestsPage(tags));
         break;
       default:
         route = MaterialPageRoute(
-            builder: (_) =>
-                Scaffold(
+            builder: (_) => Scaffold(
                   body: Center(
                       child: Text('No route defined for ${settings.name}')),
                 ));

@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
@@ -132,7 +131,7 @@ class _ListingsPageState extends State<ListingsPage> {
       if (Platform.isIOS) {
         /// TODO handle bug where tile catches onTap instead of app bar's action
         appBar = CupertinoSliverNavigationBar(
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primary, // TODO see if this can be removed on iOS
             largeTitle: Text(widget.title),
             trailing: Material(
               color: Theme.of(context).colorScheme.primary,
@@ -150,7 +149,6 @@ class _ListingsPageState extends State<ListingsPage> {
             widget.title,
             style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
-          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
           pinned: false,
           actions: <Widget>[
             IconButton(

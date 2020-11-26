@@ -35,11 +35,9 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         String authCode = uri.queryParameters["code"];
         logger.d('Got authorization code $authCode');
         await closeWebView();
-        // if (_redditWrapper != null && !_redditWrapper.reddit.auth.isValid) {
         await _tempReddit.auth.authorize(authCode);
         emit(RedditWrapper(
             _tempReddit)); // Create a new RedditWrapper to force state update
-        // }
       } else {
         logger.i('Got no initial link back from the authorization Uri');
       }
