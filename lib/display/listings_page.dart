@@ -90,24 +90,24 @@ class _ListingsPageState extends State<ListingsPage> {
 
         return BlocBuilder<NavigationIndexCubit, int>(
             builder: (context, index) {
-              logger.v( 'index set to $index' ) ;
+          logger.v('index set to $index');
 
-              Widget main ;
-              if( index == 0 )
-                main = _getMainList( context ) ;
-              else if( index == 1 )
-                main = Center( child: Text( 'messages' ) ) ;
-              else if( index == 2 )
-                main = Center( child: Text( 'more' ) ) ;
-              else
-                logger.e( 'Navigation index set to $index' ) ;
+          Widget main;
+          if (index == 0)
+            main = _getMainList(context);
+          else if (index == 1)
+            main = Center(child: Text('messages'));
+          else if (index == 2)
+            main = Center(child: Text('more'));
+          else
+            logger.e('Navigation index set to $index');
           return Stack(
               fit: StackFit.expand,
               alignment: AlignmentDirectional.center,
               children: <Widget>[
                 main,
                 (redditWrapper == null || redditWrapper.reddit == null)
-                    ? PlatformCircularProgressIndicator()
+                    ? PlatformCircularProgressIndicator() //TODO on Android this is huge
                     : Container()
               ]);
         });
@@ -119,6 +119,7 @@ class _ListingsPageState extends State<ListingsPage> {
   /// The main body of this page; this is the list that loads submissions (i.e
   /// posts or articles)
   Widget _getMainList(BuildContext context) {
+    // TODO Move this all into its own Stateless Widget
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
       List<SubmissionWrapper> listWrappers = state.submissions
@@ -131,7 +132,9 @@ class _ListingsPageState extends State<ListingsPage> {
       if (Platform.isIOS) {
         /// TODO handle bug where tile catches onTap instead of app bar's action
         appBar = CupertinoSliverNavigationBar(
-            backgroundColor: Theme.of(context).colorScheme.primary, // TODO see if this can be removed on iOS
+            backgroundColor: Theme.of(context)
+                .colorScheme
+                .primary, // TODO see if this can be removed on iOS
             largeTitle: Text(widget.title),
             trailing: Material(
               color: Theme.of(context).colorScheme.primary,
@@ -159,10 +162,26 @@ class _ListingsPageState extends State<ListingsPage> {
             PopupMenuButton<String>(
               onSelected: _choiceAction,
               itemBuilder: (_) {
-                return overflowMenu.map((String choice) {
-                  return PopupMenuItem<String>(
-                      value: choice, child: Text(choice));
-                }).toList();
+                RedditWrapper redditWrapper =
+                    BlocProvider.of<RedditClientCubit>(context).state;
+                Widget accountField;
+                if (redditWrapper.isAuthenticated())
+                  accountField = FutureBuilder(
+                      future: redditWrapper.getUsername(),
+                      initialData: 'Reddit account: loading',
+                      builder: (_, AsyncSnapshot<String> data) {
+                        return data.hasData
+                            ? Text(data.data)
+                            : Text("Loading Reddit account");
+                      });
+                else
+                  accountField = Text("Login to Reddit");
+                return <PopupMenuItem<String>>[
+                  PopupMenuItem<String>(
+                      value: overflowMenu[0], child: accountField, enabled: !redditWrapper.isAuthenticated(),),
+                  PopupMenuItem<String>(
+                      value: overflowMenu[1], child: Text(overflowMenu[1]))
+                ];
               },
             )
           ],

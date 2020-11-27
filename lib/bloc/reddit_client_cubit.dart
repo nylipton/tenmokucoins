@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,8 +21,10 @@ import 'package:equatable/equatable.dart';
 class RedditClientCubit extends Cubit<RedditWrapper> {
   final logger = Logger();
   RedditWrapper _redditWrapper;
+  Reddit _tempReddit;
+
   static const userAgentId = 'tenmokucoins';
-  Reddit _tempReddit ;
+  static const authCodeKey = 'reddit_auth_code';
 
   /// stream of deep-link listener updates, for getting OAuth authorization code
   StreamSubscription _sub;
@@ -36,6 +39,14 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.d('Got authorization code $authCode');
         await closeWebView();
         await _tempReddit.auth.authorize(authCode);
+
+        SharedPreferences.getInstance().then(
+            (sharedPrefs) => sharedPrefs.setString(
+                authCodeKey, _tempReddit.auth.credentials.toJson()),
+            onError: (err) => logger.e(
+                'Unable to save Reddit authentication code in shared preferences',
+                err));
+
         emit(RedditWrapper(
             _tempReddit)); // Create a new RedditWrapper to force state update
       } else {
@@ -63,28 +74,46 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
 
   /// Launches the browser, which allows the user to login.
   void authenticate() async {
-    try {
-      logger.d('Starting to authenticate...');
-      _tempReddit = Reddit.createInstalledFlowInstance(
-          redirectUri: Uri.parse("tenmokucoins://tenmoku.com"),
-          clientId: REDDIT_CLIENT_ID,
-          userAgent: userAgentId);
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var authCode = prefs.get(authCodeKey);
+    if (authCode == null) {
+      logger.d(
+          'Starting to authenticate by requesting the user to authenticate...');
+      try {
+        _tempReddit = Reddit.createInstalledFlowInstance(
+            redirectUri: Uri.parse("tenmokucoins://tenmoku.com"),
+            clientId: REDDIT_CLIENT_ID,
+            userAgent: userAgentId);
 
-      final authUrl = _tempReddit.auth.url(
-          ['read', 'account', 'identity'], 'tenmokucoins-auth',
-          compactLogin: true);
-      logger.d("authentication URL is $authUrl");
-      // emit(RedditWrapper(reddit));
-      if (await canLaunch(authUrl.toString())) {
-        logger.d("launching authorization page");
-        launch(authUrl.toString());
-      } else {
-        logger.w('Not able to launch browser to authenticate');
-        addError('Not able to launch browser to authenticate');
+        final authUrl = _tempReddit.auth.url(
+            ['read', 'account', 'identity'], 'tenmokucoins-auth',
+            compactLogin: true);
+        logger.d("authentication URL is $authUrl");
+
+        if (await canLaunch(authUrl.toString())) {
+          logger.d("launching authorization page");
+          launch(authUrl.toString());
+        } else {
+          logger.w('Not able to launch browser to authenticate');
+          addError('Not able to launch browser to authenticate');
+        }
+      } catch (e, stacktrace) {
+        addError(e);
+        logger.e(e, stacktrace);
       }
-    } catch (e, stacktrace) {
-      addError(e);
-      logger.e(e, stacktrace);
+    } else {
+      logger.d('Starting to reauthenticate using the stored credentials');
+      _tempReddit = Reddit.restoreInstalledAuthenticatedInstance(authCode,
+          userAgent: userAgentId,
+          clientId: REDDIT_CLIENT_ID,
+          redirectUri: Uri.parse("tenmokucoins://tenmoku.com"));
+      if (_tempReddit != null && _tempReddit.auth.isValid) {
+        logger.d('Successfully reauthenticated using stored credentials');
+        emit(RedditWrapper(_tempReddit));
+      } else {
+        logger.e('Unable to reauthenticate using stored credentials. Clearing the stored one');
+        await prefs.setString( authCodeKey, null ) ;
+      }
     }
   }
 
@@ -120,5 +149,5 @@ class RedditWrapper extends Equatable {
   bool get stringify => true;
 
   /// whether the [Reddit] instance is [null] or read-only
-  bool isAuthenticated( ) => !( reddit == null || reddit.readOnly ) ;
+  bool isAuthenticated() => !(reddit == null || reddit.readOnly);
 }
