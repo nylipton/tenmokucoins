@@ -108,11 +108,13 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
           clientId: REDDIT_CLIENT_ID,
           redirectUri: Uri.parse("tenmokucoins://tenmoku.com"));
       if (_tempReddit != null && _tempReddit.auth.isValid) {
-        logger.d('Successfully reauthenticated using stored credentials');
+        Future(_tempReddit.user.me).then((Redditor redditor) => logger.d(
+            'Successfully reauthenticated using stored credentials. User ${redditor.displayName}'));
         emit(RedditWrapper(_tempReddit));
       } else {
-        logger.e('Unable to reauthenticate using stored credentials. Clearing the stored one');
-        await prefs.setString( authCodeKey, null ) ;
+        logger.e(
+            'Unable to reauthenticate using stored credentials. Clearing the stored one');
+        await prefs.setString(authCodeKey, null);
       }
     }
   }
