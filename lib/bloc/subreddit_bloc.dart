@@ -243,7 +243,6 @@ abstract class SubredditListState extends Equatable {
   const SubredditListState(this.submissions, this.lastId);
 
   @override
-  // TODO: implement props
   List<Object> get props => [...submissions];
 
   @override
