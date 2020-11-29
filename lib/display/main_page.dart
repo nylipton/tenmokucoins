@@ -25,9 +25,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final Logger logger = Logger();
 
-  /// tags are used as filters for the list (or highlights, depending on implementation)
-  List<String> _tags = [];
-
   @override
   void dispose() {
     RedditClientCubit redditCubit = BlocProvider.of(context);
@@ -48,7 +45,7 @@ class _MainPageState extends State<MainPage> {
 
           Widget main;
           if (index == 0)
-            main = ListingsWidget(widget.title, _tags);
+            main = ListingsWidget(widget.title);
           else if (index == 1)
             main = Center(child: Text('messages'));
           else if (index == 2)

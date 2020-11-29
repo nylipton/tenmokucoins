@@ -18,18 +18,18 @@ import 'package:url_launcher/url_launcher.dart';
 class ListingsWidget extends StatefulWidget {
 
   final String title ;
-  final List<String> _tags ;
-  ListingsWidget(this.title, this._tags);
+
+  ListingsWidget(this.title);
 
   @override
-  State<StatefulWidget> createState() => ListingsWidgetState(_tags) ;
+  State<StatefulWidget> createState() => ListingsWidgetState() ;
 }
 
 class ListingsWidgetState extends State<ListingsWidget> {
   /// tags are used as filters for the list (or highlights, depending on implementation)
   List<String> _tags = [];
   final Logger logger = Logger();
-  /// When the user views the item [_nextPageThreshhold] away from the bottom,
+  /// When the user views the item [_nextPageThreshold] away from the bottom,
   /// more items are requested from the server
   static const int _nextPageThreshold = 5;
 
@@ -42,7 +42,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, feedback];
-  ListingsWidgetState(this._tags);
+  ListingsWidgetState();
 
 
   /// key used in shared_preferences
