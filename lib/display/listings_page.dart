@@ -105,10 +105,10 @@ class _ListingsPageState extends State<ListingsPage> {
               fit: StackFit.expand,
               alignment: AlignmentDirectional.center,
               children: <Widget>[
-                main,
                 (redditWrapper == null || redditWrapper.reddit == null)
-                    ? PlatformCircularProgressIndicator() //TODO on Android this is huge
-                    : Container()
+                    ? Align( alignment: Alignment.center,child: PlatformCircularProgressIndicator() )
+                    : Container(),
+                main,
               ]);
         });
       }),
@@ -178,7 +178,10 @@ class _ListingsPageState extends State<ListingsPage> {
                   accountField = Text("Login to Reddit");
                 return <PopupMenuItem<String>>[
                   PopupMenuItem<String>(
-                      value: overflowMenu[0], child: accountField, enabled: !redditWrapper.isAuthenticated(),),
+                    value: overflowMenu[0],
+                    child: accountField,
+                    enabled: !redditWrapper.isAuthenticated(),
+                  ),
                   PopupMenuItem<String>(
                       value: overflowMenu[1], child: Text(overflowMenu[1]))
                 ];
