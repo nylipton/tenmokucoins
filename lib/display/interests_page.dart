@@ -204,7 +204,6 @@ class InterestsPageScaffold extends StatelessWidget {
   /// Returns the selected tags back to the caller by popping
   void _save({@required BuildContext context, List<String> tags}) {
     logger.d('Saving new filter settings: $tags');
-    // TODO save the new filters to a bloc
     Navigator.pop(context, tags);
   }
 }
