@@ -232,13 +232,17 @@ class InterestSection extends StatelessWidget {
               itemBuilder: (_, index) {
                 String section = interestOptions.keys.toList()[index];
                 Widget chipsWidget;
-                if (interestOptions[section].length == 0)
+                if (interestOptions[section].isEmpty) {
                   chipsWidget = Container();
-                else
+                }
+                else {
                   chipsWidget = Material(
                     child: ChipsChoice<String>.multiple(
                       choiceActiveStyle: C2ChoiceStyle(
-                          color: Theme.of(context).colorScheme.secondary,
+                          color: Theme
+                              .of(context)
+                              .colorScheme
+                              .secondary,
                           brightness: Brightness.dark),
                       value: tags,
                       onChanged: (val) =>
@@ -251,6 +255,7 @@ class InterestSection extends StatelessWidget {
                       wrapped: true,
                     ),
                   );
+                }
                 return Content(title: section, child: chipsWidget);
               },
             ),
@@ -330,7 +335,7 @@ class _ContentState extends State<Content>
     );
   }
 
-  addTag(BuildContext context, String name) {
+  void addTag(BuildContext context, String name) {
     BlocProvider.of<TagsCubit>(context).add(name);
   }
 
@@ -346,7 +351,8 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
         super(state);
 
   /// Note: makes a deep copy
-  set(Map<String, List<String>> val) {
+  void set(Map<String, List<String>> val) {
+    //TODO there's probably a more standard dart method signature
     Map<String, List<String>> newMap = {};
     state.keys.forEach((group) => newMap[group] = [...state[group]]);
     emit(newMap);
@@ -354,7 +360,7 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
 
   /// Adds the given tag, if it wasn't already in it. Adds the group if it isn't
   /// already there
-  void add({String group = customGroup, String tag}) {
+  void add({String group = customGroup, @required String tag}) {
     assert(tag != null);
     assert(state != null);
     if (state[group] == null) state[group] = <String>[];
@@ -378,10 +384,10 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
 /// Represents the currently selected list of tags that the user's interested in.
 class TagsCubit extends Cubit<List<String>> {
   TagsCubit(List<String> state, this._interestOptionsCubit) : super(state);
-  InterestOptionsCubit _interestOptionsCubit;
+  final InterestOptionsCubit _interestOptionsCubit;
 
   /// Note: makes a copy of the list
-  set(List<String> val) => emit([...val]);
+  void set(List<String> val) => emit([...val]);
 
   /// Adds this tag to the list of selected tags, if it isn't already in there.
   /// Returns whether it successfully added the name (i.e. false if it was already

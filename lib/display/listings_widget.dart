@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -15,19 +14,19 @@ import 'package:tenmoku_coins/display/submission_wrapper.dart';
 /// The main component of this page when showing the listings.
 /// This is the list that loads submissions (i.e posts or articles).
 class ListingsWidget extends StatefulWidget {
-
-  final String title ;
+  final String title;
 
   ListingsWidget(this.title);
 
   @override
-  State<StatefulWidget> createState() => ListingsWidgetState() ;
+  State<StatefulWidget> createState() => ListingsWidgetState();
 }
 
 class ListingsWidgetState extends State<ListingsWidget> {
   /// tags are used as filters for the list (or highlights, depending on implementation)
   List<String> _tags = [];
   final Logger logger = Logger();
+
   /// When the user views the item [_nextPageThreshold] away from the bottom,
   /// more items are requested from the server
   static const int _nextPageThreshold = 5;
@@ -41,13 +40,18 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, feedback];
+
   ListingsWidgetState();
 
   /// key used in shared_preferences
   static const tagsKey = 'user_tags';
 
-  Future<SharedPreferences> _futureprefs = SharedPreferences.getInstance();
+  /// This will load up [SharedPreferences] when ready.
+  final Future<SharedPreferences> _futureprefs =
+      SharedPreferences.getInstance();
+
   SharedPreferences _prefs;
+
   @override
   void initState() {
     super.initState();
@@ -72,103 +76,103 @@ class ListingsWidgetState extends State<ListingsWidget> {
   Widget build(BuildContext context) {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
-          List<SubmissionWrapper> listWrappers = state.submissions
-              .map((s) => SubmissionWrapper(item: s, tags: _tags))
-              .toList(growable: false);
+      List<SubmissionWrapper> listWrappers = state.submissions
+          .map((s) => SubmissionWrapper(item: s, tags: _tags))
+          .toList(growable: false);
 
-          List<Widget> sliverlist = [];
+      List<Widget> sliverlist = [];
 
-          Widget appBar;
-          if (Platform.isIOS) {
-            /// TODO handle bug where tile catches onTap instead of app bar's action
-            appBar = CupertinoSliverNavigationBar(
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .primary, // TODO see if this can be removed on iOS
-                largeTitle: Text(widget.title),
-                trailing: Material(
-                  color: Theme.of(context).colorScheme.primary,
-                  child: IconButton(
-                    icon: Icon(CupertinoIcons.heart_circle,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    tooltip: 'Interests',
-                    onPressed: _highlight,
-                  ),
-                ));
-          } else {
-            appBar = SliverAppBar(
-              elevation: 1.0,
-              title: Text(
-                widget.title,
-                style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+      Widget appBar;
+      if (Platform.isIOS) {
+        /// TODO handle bug where tile catches onTap instead of app bar's action
+        appBar = CupertinoSliverNavigationBar(
+            backgroundColor: Theme.of(context)
+                .colorScheme
+                .primary, // TODO see if this can be removed on iOS
+            largeTitle: Text(widget.title),
+            trailing: Material(
+              color: Theme.of(context).colorScheme.primary,
+              child: IconButton(
+                icon: Icon(CupertinoIcons.heart_circle,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                tooltip: 'Interests',
+                onPressed: _highlight,
               ),
-              pinned: false,
-              actions: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.rule),
-                  tooltip: 'Interests',
-                  onPressed: _highlight,
-                ),
-                PopupMenuButton<String>(
-                  onSelected: _choiceAction,
-                  itemBuilder: (_) {
-                    RedditWrapper redditWrapper =
-                        BlocProvider.of<RedditClientCubit>(context).state;
-                    Widget accountField;
-                    if (redditWrapper.isAuthenticated())
-                      accountField = FutureBuilder(
-                          future: redditWrapper.getUsername(),
-                          initialData: 'Reddit account: loading',
-                          builder: (_, AsyncSnapshot<String> data) {
-                            return data.hasData
-                                ? Text(data.data)
-                                : Text("Loading Reddit account");
-                          });
-                    else
-                      accountField = Text("Login to Reddit");
-                    return <PopupMenuItem<String>>[
-                      PopupMenuItem<String>(
-                        value: overflowMenu[0],
-                        child: accountField,
-                        enabled: !redditWrapper.isAuthenticated(),
-                      ),
-                      PopupMenuItem<String>(
-                          value: overflowMenu[1], child: Text(overflowMenu[1]))
-                    ];
-                  },
-                )
-              ],
-            );
-          }
-          sliverlist.add(appBar);
-
-          if (Platform.isIOS) {
-            sliverlist.add(CupertinoSliverRefreshControl(
-              onRefresh: () => Future<void>(() =>
-                  BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListClearEvent())),
             ));
-          }
-          // this is the actual list of submissions
-          sliverlist.add(SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                // if we're near the end, request more submissions from Reddit
-                if ((listWrappers.length - _nextPageThreshold) == index)
-                  BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListLoadSubmissions(numberToLoad: 10));
-                // generate the tile for the submission
-                return createListTile(listWrappers, index);
-              },
-              childCount: listWrappers.length + (_isLoading ? 1 : 0),
+      } else {
+        appBar = SliverAppBar(
+          elevation: 1.0,
+          title: Text(
+            widget.title,
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          pinned: false,
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.rule),
+              tooltip: 'Interests',
+              onPressed: _highlight,
             ),
-          ));
+            PopupMenuButton<String>(
+              onSelected: _choiceAction,
+              itemBuilder: (_) {
+                var redditWrapper =
+                    BlocProvider.of<RedditClientCubit>(context).state;
+                Widget accountField;
+                accountField = (redditWrapper.isAuthenticated())
+                    ? FutureBuilder(
+                        future: redditWrapper.getUsername(),
+                        initialData: 'Reddit account: loading',
+                        builder: (_, AsyncSnapshot<String> data) {
+                          return data.hasData
+                              ? Text(data.data)
+                              : Text('Loading Reddit account');
+                        })
+                    : Text('Login to Reddit');
+                return <PopupMenuItem<String>>[
+                  PopupMenuItem<String>(
+                    value: overflowMenu[0],
+                    child: accountField,
+                    enabled: !redditWrapper.isAuthenticated(),
+                  ),
+                  PopupMenuItem<String>(
+                      value: overflowMenu[1], child: Text(overflowMenu[1]))
+                ];
+              },
+            )
+          ],
+        );
+      }
+      sliverlist.add(appBar);
 
-          return CustomScrollView(
-            slivers: sliverlist,
-            shrinkWrap: true,
-          );
-        });
+      if (Platform.isIOS) {
+        sliverlist.add(CupertinoSliverRefreshControl(
+          onRefresh: () => Future<void>(() =>
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListClearEvent())),
+        ));
+      }
+      // this is the actual list of submissions
+      sliverlist.add(SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            // if we're near the end, request more submissions from Reddit
+            if ((listWrappers.length - _nextPageThreshold) == index) {
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListLoadSubmissions(numberToLoad: 10));
+            }
+            // generate the tile for the submission
+            return createListTile(listWrappers, index);
+          },
+          childCount: listWrappers.length + (_isLoading ? 1 : 0),
+        ),
+      ));
+
+      return CustomScrollView(
+        slivers: sliverlist,
+        shrinkWrap: true,
+      );
+    });
 
     // RefreshIndicator is so the list will clear and refresh when pulled down
     if (!Platform.isIOS) {
@@ -182,25 +186,24 @@ class ListingsWidgetState extends State<ListingsWidget> {
   }
 
   /// Launches the interests dialog to get the tags
-  _highlight() async {
+  void _highlight() async {
     logger.d('Filter main submissions list selected');
     final result =
-    await Navigator.pushNamed(context, '/filter', arguments: _tags);
+        await Navigator.pushNamed(context, '/filter', arguments: _tags);
     logger.d('Filter dialog returned $result');
     if (result != null) {
       setState(() {
         _tags = result;
       });
 
-      _prefs
-          .setStringList(tagsKey, result)
-          .then((t) => logger.d('Saved updated tags: $_tags'));
+      await _prefs.setStringList(tagsKey, result);
+      logger.d('Saved updated tags: $_tags');
     }
   }
 
   /// this is the main list tile that will go in the list
   Widget createListTile(List<SubmissionWrapper> contentList, int index) {
-    if (contentList.length == 0) {
+    if (contentList.isEmpty) {
       return Container();
     } else if (index == contentList.length) {
       return Center(
@@ -208,7 +211,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
               padding: const EdgeInsets.all(8),
               child: PlatformCircularProgressIndicator()));
     } else {
-      return SubmissionTile( contentList[index] ) ;
+      return SubmissionTile(contentList[index]);
     }
   }
 

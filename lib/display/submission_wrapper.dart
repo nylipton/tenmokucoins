@@ -1,4 +1,4 @@
-
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
 
@@ -12,12 +12,11 @@ class SubmissionWrapper {
   bool _hasMatch = false;
   String _title;
   String _avatarString;
-
   String _subtitle;
 
-  List<String> _matchingTags = [];
+  final List<String> _matchingTags = [];
 
-  SubmissionWrapper({this.item, List<String> tags = const []})
+  SubmissionWrapper({@required this.item, List<String> tags = const []})
       : assert(item != null) {
     tags.forEach((tag) {
       RegExp regex = RegExp(tag, caseSensitive: false);
@@ -41,7 +40,7 @@ class SubmissionWrapper {
     '${item.getSubredditTitle()}: ${DateTimeFormatter.format(item.getTimestamp())}';
 
     Set<PostType> postTypes = item.getPostTypes();
-    _avatarString = (postTypes.length == 0)
+    _avatarString = (postTypes.isEmpty)
         ? "?"
         : postTypes
         .map((p) => p.toShortString())

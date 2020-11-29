@@ -104,19 +104,19 @@ class Router {
 
     switch (settings.name) {
       case homeRoute:
-        if (iOS)
-          route = CupertinoPageRoute(builder: (_) => HomePage());
-        else
-          route = MaterialPageRoute(builder: (_) => HomePage());
+        route = (iOS)
+            ? CupertinoPageRoute(builder: (_) => HomePage())
+            : MaterialPageRoute(builder: (_) => HomePage());
+
         break;
       case filterRoute:
         var tags = settings.arguments;
-        if (iOS)
-          route = CupertinoPageRoute(
-              fullscreenDialog: true, builder: (_) => InterestsPage(tags));
-        else
-          route = MaterialPageRoute(
-              fullscreenDialog: true, builder: (_) => InterestsPage(tags));
+        route = (iOS)
+            ? CupertinoPageRoute(
+                fullscreenDialog: true, builder: (_) => InterestsPage(tags))
+            : MaterialPageRoute(
+                fullscreenDialog: true, builder: (_) => InterestsPage(tags));
+
         break;
       default:
         route = MaterialPageRoute(

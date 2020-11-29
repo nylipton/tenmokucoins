@@ -6,37 +6,36 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// A tile representing a submission (i.e. a Reddit Post).
 class SubmissionTile extends StatelessWidget {
-  final SubmissionWrapper _submissionWrapper ;
+  final SubmissionWrapper _submissionWrapper;
 
-  SubmissionTile(this._submissionWrapper): super( key: ValueKey(_submissionWrapper.id));
+  SubmissionTile(this._submissionWrapper)
+      : super(key: ValueKey(_submissionWrapper.id));
 
   @override
   Widget build(BuildContext context) {
     Widget w, leading, trailing;
 
+    var avatarBackgroundColor = _submissionWrapper.hasMatch
+        ? Theme.of(context).colorScheme.secondary
+        : Theme.of(context).colorScheme.primaryVariant;
+    var avatarForegroundColor = _submissionWrapper.hasMatch
+        ? Theme.of(context).colorScheme.onSecondary
+        : Theme.of(context).colorScheme.onPrimary;
 
-      Color avatarBackgroundColor = _submissionWrapper.hasMatch
-          ? Theme.of(context).colorScheme.secondary
-          : Theme.of(context).colorScheme.primaryVariant;
-      Color avatarForegroundColor = _submissionWrapper.hasMatch
-          ? Theme.of(context).colorScheme.onSecondary
-          : Theme.of(context).colorScheme.onPrimary;
+    leading = CircleAvatar(
+      child: Text(_submissionWrapper.avatarString,
+          style: TextStyle(color: avatarForegroundColor)),
+      backgroundColor: avatarBackgroundColor,
+    );
+    trailing = GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        // TODO figure out why this is taking over taps even if the appbar is over it
+        onTap: () => _launch(_submissionWrapper.item.submission.url),
+        child: Icon(
+          Icons.keyboard_arrow_right,
+        ));
 
-      leading = CircleAvatar(
-        child: Text(_submissionWrapper.avatarString,
-            style: TextStyle(color: avatarForegroundColor)),
-        backgroundColor: avatarBackgroundColor,
-      );
-      trailing = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          // TODO figure out why this is taking over taps even if the appbar is over it
-          onTap: () => _launch(_submissionWrapper.item.submission.url),
-          child: Icon(
-            Icons.keyboard_arrow_right,
-          ));
-
-
-    List<WidgetSpan> tagWidgets = _submissionWrapper.matchingTags.map((tag) {
+    var tagWidgets = _submissionWrapper.matchingTags.map((tag) {
       return WidgetSpan(
           child: Badge(
             padding: EdgeInsets.fromLTRB(3, 0, 3, 0),
@@ -44,7 +43,7 @@ class SubmissionTile extends StatelessWidget {
             badgeColor: Theme.of(context).colorScheme.secondary,
             borderRadius: BorderRadius.circular(15.0),
             badgeContent:
-            Text(tag, style: Theme.of(context).textTheme.bodyText1),
+                Text(tag, style: Theme.of(context).textTheme.bodyText1),
             elevation: 0.0,
           ),
           alignment: PlaceholderAlignment.baseline,
@@ -76,7 +75,7 @@ class SubmissionTile extends StatelessWidget {
   }
 
   /// used to launch the browser
-  _launch(Uri shortlink) {
+  void _launch(Uri shortlink) {
     launch(shortlink.toString());
   }
 }

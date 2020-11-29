@@ -60,10 +60,12 @@ dependencies:
   ## cross-platform widgets
   flutter_platform_widgets: ^0.71.0
 
+  ## This package provides a library that performs static analysis of Dart code.
+  ## It is useful for tool integration and embedding.
+  analyzer: ^0.41.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  bloc_test: ^7.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

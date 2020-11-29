@@ -44,14 +44,18 @@ class _MainPageState extends State<MainPage> {
           logger.v('Main page\'s index set to $index');
 
           Widget main;
-          if (index == 0)
+          if (index == 0) {
             main = ListingsWidget(widget.title);
-          else if (index == 1)
+          }
+          else if (index == 1) {
             main = Center(child: Text('messages'));
-          else if (index == 2)
+          }
+          else if (index == 2) {
             main = Center(child: Text('more'));
-          else
+          }
+          else {
             logger.e('Navigation index set to $index');
+          }
           return Stack(
               fit: StackFit.expand,
               alignment: AlignmentDirectional.center,

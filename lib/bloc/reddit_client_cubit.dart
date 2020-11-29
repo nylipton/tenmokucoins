@@ -32,19 +32,16 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
     // First, set up a listener for deep link updates. This is necessary for
     // being notified when the authenticator has been updated.
     _sub = getUriLinksStream().listen((uri) async {
-      logger.d("Got an updated response: $uri");
-      if (uri != null && uri.queryParameters["code"] != null) {
-        String authCode = uri.queryParameters["code"];
+      logger.d('Got an updated response: $uri');
+      if (uri != null && uri.queryParameters['code'] != null) {
+        var authCode = uri.queryParameters['code'];
         logger.d('Got authorization code $authCode');
         await closeWebView();
         await _tempReddit.auth.authorize(authCode);
 
-        SharedPreferences.getInstance().then(
-            (sharedPrefs) => sharedPrefs.setString(
-                authCodeKey, _tempReddit.auth.credentials.toJson()),
-            onError: (err) => logger.e(
-                'Unable to save Reddit authentication code in shared preferences',
-                err));
+        var sharedPrefs = await SharedPreferences.getInstance();
+        await sharedPrefs.setString(
+            authCodeKey, _tempReddit.auth.credentials.toJson());
 
         emit(RedditWrapper(
             _tempReddit)); // Create a new RedditWrapper to force state update
@@ -91,7 +88,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
 
         if (await canLaunch(authUrl.toString())) {
           logger.d("launching authorization page");
-          launch(authUrl.toString());
+          await launch(authUrl.toString());
         } else {
           logger.w('Not able to launch browser to authenticate');
           addError('Not able to launch browser to authenticate');
@@ -107,13 +104,15 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
           clientId: REDDIT_CLIENT_ID,
           redirectUri: Uri.parse("tenmokucoins://tenmoku.com"));
       if (_tempReddit != null && _tempReddit.auth.isValid) {
-        Future(_tempReddit.user.me).then((Redditor redditor) => logger.d(
-            'Successfully reauthenticated using stored credentials. User ${redditor.displayName}'));
+        var me = await _tempReddit.user.me ;
+        logger.d(
+            'Successfully reauthenticated using stored credentials. User ${me}');
         emit(RedditWrapper(_tempReddit));
       } else {
         logger.e(
             'Unable to reauthenticate using stored credentials. Clearing the stored one');
         await prefs.setString(authCodeKey, null);
+        authenticate() ; // try this again
       }
     }
   }
@@ -134,13 +133,13 @@ class RedditWrapper extends Equatable {
   /// gets a human-readable username with 'not logged in' if the user isn't
   /// authenticated
   Future<String> getUsername() {
-    if (reddit == null || !reddit.auth.isValid)
-      return Future<String>.value("not logged in");
-    else
-      return reddit.user
-          .me()
-          .then((r) => r.displayName)
-          .catchError((err) => "Anonymous");
+    var username = (reddit == null || !reddit.auth.isValid)
+        ? Future<String>.value('not logged in')
+        : reddit.user
+            .me()
+            .then((r) => r.displayName)
+            .catchError((err) => 'Anonymous');
+    return username;
   }
 
   @override

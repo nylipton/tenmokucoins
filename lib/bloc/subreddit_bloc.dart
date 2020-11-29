@@ -100,12 +100,12 @@ class SubredditBloc extends Bloc<SubredditListEvent, SubredditListState> {
       var list = state.submissions;
       list.add(event.item);
       list.sort((a, b) => b.getTimestamp().compareTo(a.getTimestamp()));
-      if (list.length == _numSubmissionsGoal)
-        return SubredditListDoneState(
-            new List<SubmissionItem>.from(state.submissions), lastId);
-      else
-        return SubredditListLoadingState(
-            new List<SubmissionItem>.from(state.submissions), lastId);
+      var newState = (list.length == _numSubmissionsGoal) ?
+         SubredditListDoneState(
+            List<SubmissionItem>.from(state.submissions), lastId) :
+        SubredditListLoadingState(
+            List<SubmissionItem>.from(state.submissions), lastId);
+      return newState ;
     }
   }
 
@@ -222,12 +222,15 @@ enum PostType { SELL, BUY, TRADE }
 extension PostString on PostType {
   String toShortString() {
     String shortString;
-    if (this == PostType.SELL)
+    if (this == PostType.SELL) {
       shortString = 'S';
-    else if (this == PostType.BUY)
+    }
+    else if (this == PostType.BUY) {
       shortString = 'B';
-    else
+    }
+    else {
       shortString = 'T';
+    }
     return shortString;
   }
 }
