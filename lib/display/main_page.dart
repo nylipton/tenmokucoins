@@ -21,7 +21,6 @@ class MainPage extends StatefulWidget {
 }
 
 /// TODO Move login from FAB into app bar and show login state
-/// TODO Restyle list tile and move it into a separate class+file
 class _MainPageState extends State<MainPage> {
   final Logger logger = Logger();
 

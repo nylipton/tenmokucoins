@@ -234,15 +234,11 @@ class InterestSection extends StatelessWidget {
                 Widget chipsWidget;
                 if (interestOptions[section].isEmpty) {
                   chipsWidget = Container();
-                }
-                else {
+                } else {
                   chipsWidget = Material(
                     child: ChipsChoice<String>.multiple(
                       choiceActiveStyle: C2ChoiceStyle(
-                          color: Theme
-                              .of(context)
-                              .colorScheme
-                              .secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                           brightness: Brightness.dark),
                       value: tags,
                       onChanged: (val) =>
@@ -300,7 +296,7 @@ class _ContentState extends State<Content>
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.fromLTRB( 15,10,15,0),
+              padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
               child: Text(
                 widget.title,
                 style: Theme.of(context).textTheme.headline6,
@@ -310,24 +306,25 @@ class _ContentState extends State<Content>
               Form(
                   key: _formKey,
                   child: Container(
-                      padding: const EdgeInsets.fromLTRB( 15,0,15,0),
-                      child:TextFormField(
-                    minLines: 1,
-                    maxLines: 1,
-                    validator: (val) {
-                      return (tagExists(context, val)
-                          ? 'This interest tag is already defined'
-                          : null);
-                    },
-                    decoration: InputDecoration(
-                      isDense: true,
-                      // contentPadding: const EdgeInsets.fromLTRB( 15,0,15,0),
-                      hintText: 'Custom tag',
-                    ),
-                    onFieldSubmitted: (v) => _formKey.currentState.validate()
-                        ? addTag(context, v)
-                        : null,
-                  ))),
+                      padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                      child: TextFormField(
+                        minLines: 1,
+                        maxLines: 1,
+                        validator: (val) {
+                          return (tagExists(context, val)
+                              ? 'This interest tag is already defined'
+                              : null);
+                        },
+                        decoration: InputDecoration(
+                          isDense: true,
+                          // contentPadding: const EdgeInsets.fromLTRB( 15,0,15,0),
+                          hintText: 'Custom tag',
+                        ),
+                        onFieldSubmitted: (v) =>
+                            _formKey.currentState.validate()
+                                ? addTag(context, v)
+                                : null,
+                      ))),
             Flexible(fit: FlexFit.loose, child: widget.child),
           ],
         ),
@@ -350,9 +347,8 @@ class InterestOptionsCubit extends Cubit<Map<String, List<String>>> {
       : assert(state != null),
         super(state);
 
-  /// Note: makes a deep copy
+  /// Sets the cubit to a new set of interest options. Note: this makes a deep copy
   void set(Map<String, List<String>> val) {
-    //TODO there's probably a more standard dart method signature
     Map<String, List<String>> newMap = {};
     state.keys.forEach((group) => newMap[group] = [...state[group]]);
     emit(newMap);
