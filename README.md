@@ -1,12 +1,10 @@
 # Tenmoku Coins
 
-An app for coin collectors. This will connect to Reddit and other forums where coins are
-bought and sold.
+An app for precious metal enthusiasts/coin collectors. This will connect to Reddit and ultimately
+other forums where coins are bought and sold.
 
 ## Todo list before 1.0 launch
-- Update IA and navigation (filters, forum login)
-- Add favorites
-- Reauthenticate automatically to Reddit
+- Update IA and navigation (filters, forum login) (need a design review)
 - Include spot price check for PMs
 - Include lookups for coin comps
 - Include communications back to original poster; include direction to login to non-authenticated users when necessary
@@ -14,6 +12,7 @@ bought and sold.
 - Include a second forum (ex: cointalk)
 
 ## Post launch roadmap
+- MORE unit testing!!!
 - Configure CI
 - Add notifications and constant monitoring
 - Ensure accessibility
@@ -25,4 +24,5 @@ bought and sold.
 - Update styling
 - Added real logging
 - Save preferred tags on device
-- Add filters
+- Add interests
+- Reauthenticate automatically to Reddit
