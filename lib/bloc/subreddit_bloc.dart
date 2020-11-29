@@ -199,7 +199,6 @@ class SubmissionItem extends Equatable {
   Set<PostType> getPostTypes() => _postTypes;
 
   @override
-  // TODO: implement props
   List<Object> get props =>
       [submission.subreddit.displayName, submission.title, submission.id];
 
@@ -245,7 +244,7 @@ abstract class SubredditListState extends Equatable {
 
   @override
   // TODO: implement props
-  List<Object> get props => [submissions];
+  List<Object> get props => [...submissions];
 
   @override
   bool get stringify => true;

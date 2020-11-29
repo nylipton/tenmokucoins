@@ -16,7 +16,6 @@ import 'package:equatable/equatable.dart';
 /// Make sure that the state isn't [null] and then check in the Reddit instance
 /// to make sure that it's authenticated. This should notify of new state when
 /// the user has authenticated.
-/// TODO implement restoring authentication
 /// TODO turn this into a Bloc with states like new, untrusted, authenticated
 class RedditClientCubit extends Cubit<RedditWrapper> {
   final logger = Logger();
