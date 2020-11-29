@@ -62,4 +62,9 @@ class SubmissionWrapper {
 
   /// Which tags matched?
   List<String> get matchingTags => _matchingTags;
+
+  /// The id of a Reddit object.
+  ///
+  /// Reddit object ids take the form of '15bfi0'.
+  String get id => item.getId() ;
 }

@@ -1,7 +1,6 @@
 
 import 'dart:io';
 
-import 'package:badges/badges.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,8 +9,8 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
+import 'package:tenmoku_coins/display/submission_tile.dart';
 import 'package:tenmoku_coins/display/submission_wrapper.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// The main component of this page when showing the listings.
 /// This is the list that loads submissions (i.e posts or articles).
@@ -43,7 +42,6 @@ class ListingsWidgetState extends State<ListingsWidget> {
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, feedback];
   ListingsWidgetState();
-
 
   /// key used in shared_preferences
   static const tagsKey = 'user_tags';
@@ -183,14 +181,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
     return w;
   }
 
-
-  /// used to launch the browser
-  _launch(Uri shortlink) {
-    logger.d(shortlink);
-    launch(shortlink.toString());
-  }
-
-  /// Launches the filter dialog to get the tags
+  /// Launches the interests dialog to get the tags
   _highlight() async {
     logger.d('Filter main submissions list selected');
     final result =
@@ -204,16 +195,11 @@ class ListingsWidgetState extends State<ListingsWidget> {
       _prefs
           .setStringList(tagsKey, result)
           .then((t) => logger.d('Saved updated tags: $_tags'));
-      // TODO Find out why Snackbar can't find a scaffold!
-      // ScaffoldMessenger.of( context ).showSnackBar( const SnackBar(content: Text( 'New filters set'),)) ;
     }
   }
 
-
   /// this is the main list tile that will go in the list
   Widget createListTile(List<SubmissionWrapper> contentList, int index) {
-    Widget w, leading, trailing;
-
     if (contentList.length == 0) {
       return Container();
     } else if (index == contentList.length) {
@@ -222,64 +208,8 @@ class ListingsWidgetState extends State<ListingsWidget> {
               padding: const EdgeInsets.all(8),
               child: PlatformCircularProgressIndicator()));
     } else {
-      Color avatarBackgroundColor = contentList[index].hasMatch
-          ? Theme.of(context).colorScheme.secondary
-          : Theme.of(context).colorScheme.primaryVariant;
-      Color avatarForegroundColor = contentList[index].hasMatch
-          ? Theme.of(context).colorScheme.onSecondary
-          : Theme.of(context).colorScheme.onPrimary;
-
-      leading = CircleAvatar(
-        child: Text(contentList[index].avatarString,
-            style: TextStyle(color: avatarForegroundColor)),
-        backgroundColor: avatarBackgroundColor,
-      );
-      trailing = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          // TODO figure out why this is taking over taps even if the appbar is over it
-          onTap: () => _launch(contentList[index].item.submission.url),
-          child: Icon(
-            Icons.keyboard_arrow_right,
-          ));
+      return SubmissionTile( contentList[index] ) ;
     }
-
-    List<WidgetSpan> tagWidgets = contentList[index].matchingTags.map((tag) {
-      return WidgetSpan(
-          child: Badge(
-            padding: EdgeInsets.fromLTRB(3, 0, 3, 0),
-            shape: BadgeShape.square,
-            badgeColor: Theme.of(context).colorScheme.secondary,
-            borderRadius: BorderRadius.circular(15.0),
-            badgeContent:
-            Text(tag, style: Theme.of(context).textTheme.bodyText1),
-            elevation: 0.0,
-          ),
-          alignment: PlaceholderAlignment.baseline,
-          baseline: TextBaseline.alphabetic);
-    }).toList();
-
-    w = ListTile(
-        leading: leading,
-        title: Text.rich(
-          TextSpan(
-              text: contentList[index].title + ' ',
-              children: tagWidgets.toList()),
-        ),
-        subtitle: Text(contentList[index].subtitle),
-        dense: true,
-        trailing: trailing);
-
-    /// the column is to include a divider
-    w = Column(
-      children: [
-        w,
-        Divider(
-          height: 0,
-        )
-      ],
-    );
-
-    return w;
   }
 
   /// For the overflow menu choice
