@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
 
-import 'listings_page.dart';
+import 'main_page.dart';
 import 'navigation_index_cubit.dart';
 
 class HomePage extends StatelessWidget {
@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
           create: (context) => NavigationIndexCubit(0),
         ),
       ],
-      child: ListingsPage(title: 'Tenmoku Coins'),
+      child: MainPage(title: 'Tenmoku Coins'),
     ) ;
   }
 }
