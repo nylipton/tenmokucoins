@@ -23,6 +23,15 @@ class MainPage extends StatefulWidget {
 /// TODO Move login from FAB into app bar and show login state
 class _MainPageState extends State<MainPage> {
   final Logger logger = Logger();
+  int _selectedTab  ;
+  RedditWrapper _redditWrapper ;
+
+
+  @override
+  void initState() {
+    _selectedTab = 0 ;
+    _redditWrapper = null ;
+  }
 
   @override
   void dispose() {
@@ -34,39 +43,44 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<RedditClientCubit, RedditWrapper>(
-          builder: (context, redditWrapper) {
-        logger.v('BlocBuilder called with $redditWrapper');
-
-        return BlocBuilder<NavigationIndexCubit, int>(
-            builder: (context, index) {
-          logger.v('Main page\'s index set to $index');
-
-          Widget main;
-          if (index == 0) {
-            main = ListingsWidget(widget.title);
-          }
-          else if (index == 1) {
-            main = Center(child: Text('messages'));
-          }
-          else if (index == 2) {
-            main = Center(child: Text('more'));
-          }
-          else {
-            logger.e('Navigation index set to $index');
-          }
-          return Stack(
-              fit: StackFit.expand,
-              alignment: AlignmentDirectional.center,
-              children: <Widget>[
-                (redditWrapper == null || redditWrapper.reddit == null)
-                    ? Align( alignment: Alignment.center,child: PlatformCircularProgressIndicator() )
-                    : Container(),
-                main,
-              ]);
-        });
-      }),
+      body: MultiBlocListener (
+        listeners: [
+        BlocListener<RedditClientCubit, RedditWrapper>(
+          listener: (context, redditWrapper) => setState( ()=> _redditWrapper = redditWrapper)
+      ),
+      BlocListener<NavigationIndexCubit, int>(
+        listener: (context, index) => setState( ()=>_selectedTab = index)
+      )
+      ],
+      child: _mainWidget(),
+    ),
       bottomNavigationBar: HomeAppBar(),
-    );
+    ) ;
+  }
+
+  Widget _mainWidget( ) {
+    Widget main;
+    if (_selectedTab == 0) {
+      main = ListingsWidget(widget.title);
+    }
+    else if (_selectedTab == 1) {
+      main = Center(child: Text('messages'));
+    }
+    else if (_selectedTab == 2) {
+      main = Center(child: Text('more'));
+    }
+    else {
+      main = Container( ) ;
+      logger.e('Navigation index set to unknown tab: $_selectedTab');
+    }
+    return Stack(
+        fit: StackFit.expand,
+        alignment: AlignmentDirectional.center,
+        children: <Widget>[
+          (_redditWrapper == null || _redditWrapper.reddit == null)
+              ? Align( alignment: Alignment.center,child: PlatformCircularProgressIndicator() )
+              : Container(),
+          main,
+        ]);
   }
 }
