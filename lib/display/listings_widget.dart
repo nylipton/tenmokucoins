@@ -11,8 +11,7 @@ import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
 import 'package:tenmoku_coins/display/submission_tile.dart';
 import 'package:tenmoku_coins/display/submission_wrapper.dart';
 
-/// The main component of this page when showing the listings.
-/// This is the list that loads submissions (i.e posts or articles).
+/// The main component of the page that shows listings (i.e. submissions).
 class ListingsWidget extends StatefulWidget {
   final String title;
 
@@ -33,23 +32,22 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
   static const String accounts = 'Accounts';
 
-  static const String feedback = 'Feedback';
+  static const String about = 'About';
 
   /// if this is currently loading new data
   bool _isLoading;
 
   /// Overflow menu options
-  static const List<String> overflowMenu = [accounts, feedback];
+  static const List<String> overflowMenu = [accounts, about];
 
-  ListingsWidgetState();
-
-  /// key used in shared_preferences
+  /// Key used in shared_preferences to store the user's tags
   static const tagsKey = 'user_tags';
 
   /// This will load up [SharedPreferences] when ready.
   final Future<SharedPreferences> _futureprefs =
       SharedPreferences.getInstance();
 
+  /// Used to save tags locally on the device
   SharedPreferences _prefs;
 
   @override
@@ -84,11 +82,11 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
       Widget appBar;
       if (Platform.isIOS) {
-        /// TODO handle bug where tile catches onTap instead of app bar's action
+        /// TODO Handle bug where tile catches onTap instead of app bar's action
         appBar = CupertinoSliverNavigationBar(
             backgroundColor: Theme.of(context)
                 .colorScheme
-                .primary, // TODO see if this can be removed on iOS
+                .primary, // TODO See if this can be removed on iOS
             largeTitle: Text(widget.title),
             trailing: Material(
               color: Theme.of(context).colorScheme.primary,
@@ -114,7 +112,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
               onPressed: _highlight,
             ),
             PopupMenuButton<String>(
-              onSelected: _choiceAction,
+              onSelected: _overflowMenuAction,
               itemBuilder: (_) {
                 var redditWrapper =
                     BlocProvider.of<RedditClientCubit>(context).state;
@@ -216,12 +214,13 @@ class ListingsWidgetState extends State<ListingsWidget> {
   }
 
   /// For the overflow menu choice
-  void _choiceAction(String choice) {
+  void _overflowMenuAction(String choice) {
     if (choice == accounts) {
       logger.d('User chose to edit accounts');
       _authenticate(context);
     } else {
-      logger.d('User chose to give feedback');
+      logger.d('Showing about dialog');
+      showAboutDialog( context: context, applicationLegalese: "Copyright 2020, Tenmoku LLC") ;
     }
   }
 

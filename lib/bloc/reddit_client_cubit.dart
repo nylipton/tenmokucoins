@@ -5,7 +5,7 @@ import 'package:draw/draw.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
+import 'package:tenmoku_coins/bloc/reddit_oauth_secret.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';

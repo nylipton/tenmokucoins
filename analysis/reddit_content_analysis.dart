@@ -1,7 +1,7 @@
 import 'package:draw/draw.dart';
 import 'dart:io';
 
-import 'package:tenmoku_coins/bloc/reddit_oauth.dart';
+import 'package:tenmoku_coins/bloc/reddit_oauth_secret.dart';
 
 Future<int> main() async {
   const subredditName = 'pmsforsale'; //+coins4sale';
