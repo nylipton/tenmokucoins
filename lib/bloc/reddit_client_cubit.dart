@@ -82,7 +82,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
             userAgent: userAgentId);
 
         final authUrl = _tempReddit.auth.url(
-            ['read', 'account', 'identity'], 'tenmokucoins-auth',
+            ['read', 'account', 'identity', 'privatemessages'], 'tenmokucoins-auth',
             compactLogin: true);
         logger.d("authentication URL is $authUrl");
 
