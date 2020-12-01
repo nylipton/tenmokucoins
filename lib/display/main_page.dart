@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_platform_widgets/flutter_platform_widgets.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/display/navigation_index_cubit.dart';
@@ -26,15 +25,12 @@ class _MainPageState extends State<MainPage> {
   final Logger logger = Logger();
   int _selectedTab;
 
-  RedditWrapper _redditWrapper;
-
   Widget listingsWidget, messagesWidget;
 
   @override
   void initState() {
     super.initState();
     _selectedTab = 0;
-    _redditWrapper = null;
   }
 
   @override
@@ -49,9 +45,6 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       body: MultiBlocListener(
         listeners: [
-          BlocListener<RedditClientCubit, RedditWrapper>(
-              listener: (context, redditWrapper) =>
-                  setState(() => _redditWrapper = redditWrapper)),
           BlocListener<NavigationIndexCubit, int>(
               listener: (context, index) =>
                   setState(() => _selectedTab = index))
