@@ -1,4 +1,6 @@
+import 'package:draw/draw.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
@@ -17,7 +19,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   final Logger logger = Logger();
 
   // State variables
-  var _messages;
+  List<Message> _messages;
   bool _authenticated;
 
   _MessagesWidgetState() {
@@ -29,8 +31,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   @override
   Widget build(BuildContext context) {
     Widget widget = _authenticated
-        ? Container(
-            child: Center(child: Text('You have ${_messages.length} messages')))
+        ? _messagesWidget()
         : Center(child: UnauthenticatedWidget());
     return BlocListener<RedditMessagesCubit, BaseRedditMessagesState>(
       listener: (BuildContext context, state) {
@@ -47,6 +48,23 @@ class _MessagesWidgetState extends State<MessagesWidget> {
       },
       child: Center(child: widget),
     );
+  }
+
+  Widget _messagesWidget() {
+    return CustomScrollView(
+      slivers: [
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, index) {
+              return ExpansionTile( title: Text( _messages[index].subject));
+            },
+            childCount: _messages.length,
+          ),
+        )
+      ],
+      shrinkWrap: true,
+    );
+    return Text('You have ${_messages.length} messages');
   }
 }
 
