@@ -235,22 +235,7 @@ class InterestSection extends StatelessWidget {
                 if (interestOptions[section].isEmpty) {
                   chipsWidget = Container();
                 } else {
-                  chipsWidget = Material(
-                    child: ChipsChoice<String>.multiple(
-                      choiceActiveStyle: C2ChoiceStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                          brightness: Brightness.dark),
-                      value: tags,
-                      onChanged: (val) =>
-                          BlocProvider.of<TagsCubit>(c).set(val),
-                      choiceItems: C2Choice.listFrom<String, String>(
-                          source: interestOptions[section],
-                          value: (i, v) => v,
-                          label: (i, v) => v,
-                          tooltip: (i, v) => v),
-                      wrapped: true,
-                    ),
-                  );
+                  chipsWidget = ChipsWidget(tags: tags, interestOptions: interestOptions[section]) ;
                 }
                 return Content(title: section, child: chipsWidget);
               },
@@ -260,6 +245,34 @@ class InterestSection extends StatelessWidget {
       });
     }
   }
+}
+
+class ChipsWidget extends StatelessWidget {
+  final List<String> interestOptions;
+  final List<String> tags ;
+
+  ChipsWidget({this.tags, this.interestOptions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: ChipsChoice<String>.multiple(
+        choiceActiveStyle: C2ChoiceStyle(
+            color: Theme.of(context).colorScheme.secondary,
+            brightness: Brightness.dark),
+        value: tags,
+        onChanged: (val) =>
+            BlocProvider.of<TagsCubit>(context).set(val),
+        choiceItems: C2Choice.listFrom<String, String>(
+            source: interestOptions,
+            value: (i, v) => v,
+            label: (i, v) => v,
+            tooltip: (i, v) => v),
+        wrapped: true,
+      ),
+    );
+  }
+
 }
 
 /// The filter contents, implemented with chips

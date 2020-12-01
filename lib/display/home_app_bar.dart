@@ -7,6 +7,7 @@ import 'package:logger/logger.dart';
 
 import 'navigation_index_cubit.dart';
 
+/// App bar at the bottom; varies by iOS or material
 class HomeAppBar extends StatelessWidget {
   final logger = Logger();
 

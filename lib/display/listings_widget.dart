@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -50,6 +51,14 @@ class ListingsWidgetState extends State<ListingsWidget> {
   /// Used to save tags locally on the device
   SharedPreferences _prefs;
 
+  StreamSubscription _subredditListLoadingStateStream ;
+
+  @override
+  void dispose() {
+    _subredditListLoadingStateStream.cancel() ;
+    super.dispose( ) ;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +72,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
     _isLoading = false;
 
-    BlocProvider.of<SubredditBloc>(context).listen((state) {
+    _subredditListLoadingStateStream = BlocProvider.of<SubredditBloc>(context).listen((state) {
       setState(() {
         _isLoading = (state is SubredditListLoadingState);
       });

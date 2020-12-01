@@ -9,6 +9,7 @@ import 'package:tenmoku_coins/display/navigation_index_cubit.dart';
 
 import 'home_app_bar.dart';
 import 'listings_widget.dart';
+import 'messages_widget.dart';
 
 /// Shows a list of postings and messages from Reddit.
 class MainPage extends StatefulWidget {
@@ -23,14 +24,17 @@ class MainPage extends StatefulWidget {
 /// TODO Move login from FAB into app bar and show login state
 class _MainPageState extends State<MainPage> {
   final Logger logger = Logger();
-  int _selectedTab  ;
-  RedditWrapper _redditWrapper ;
+  int _selectedTab;
 
+  RedditWrapper _redditWrapper;
+
+  Widget listingsWidget, messagesWidget;
 
   @override
   void initState() {
-    _selectedTab = 0 ;
-    _redditWrapper = null ;
+    super.initState();
+    _selectedTab = 0;
+    _redditWrapper = null;
   }
 
   @override
@@ -43,44 +47,25 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MultiBlocListener (
+      body: MultiBlocListener(
         listeners: [
-        BlocListener<RedditClientCubit, RedditWrapper>(
-          listener: (context, redditWrapper) => setState( ()=> _redditWrapper = redditWrapper)
+          BlocListener<RedditClientCubit, RedditWrapper>(
+              listener: (context, redditWrapper) =>
+                  setState(() => _redditWrapper = redditWrapper)),
+          BlocListener<NavigationIndexCubit, int>(
+              listener: (context, index) =>
+                  setState(() => _selectedTab = index))
+        ],
+        child: IndexedStack(
+          index: _selectedTab,
+          children: [
+            ListingsWidget(widget.title),
+            MessagesWidget(widget.title),
+            Center(child: Text('more'))
+          ],
+        )
       ),
-      BlocListener<NavigationIndexCubit, int>(
-        listener: (context, index) => setState( ()=>_selectedTab = index)
-      )
-      ],
-      child: _mainWidget(),
-    ),
       bottomNavigationBar: HomeAppBar(),
-    ) ;
-  }
-
-  Widget _mainWidget( ) {
-    Widget main;
-    if (_selectedTab == 0) {
-      main = ListingsWidget(widget.title);
-    }
-    else if (_selectedTab == 1) {
-      main = Center(child: Text('messages'));
-    }
-    else if (_selectedTab == 2) {
-      main = Center(child: Text('more'));
-    }
-    else {
-      main = Container( ) ;
-      logger.e('Navigation index set to unknown tab: $_selectedTab');
-    }
-    return Stack(
-        fit: StackFit.expand,
-        alignment: AlignmentDirectional.center,
-        children: <Widget>[
-          (_redditWrapper == null || _redditWrapper.reddit == null)
-              ? Align( alignment: Alignment.center,child: PlatformCircularProgressIndicator() )
-              : Container(),
-          main,
-        ]);
+    );
   }
 }
