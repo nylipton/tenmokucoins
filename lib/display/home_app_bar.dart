@@ -23,14 +23,9 @@ class HomeAppBar extends StatelessWidget {
               label: 'Posts',
             ),
 
-            /// TODO implement messages
             BottomNavigationBarItem(
                 icon: Icon(CupertinoIcons.conversation_bubble),
                 label: 'Messages'),
-
-            /// TODO implement more dialog with login and feedback
-            BottomNavigationBarItem(
-                icon: Icon(CupertinoIcons.ellipsis_circle), label: 'More'),
           ],
           currentIndex: index,
           onTap: (index) =>
