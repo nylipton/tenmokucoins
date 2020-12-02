@@ -64,7 +64,6 @@ class _MessagesWidgetState extends State<MessagesWidget> {
       ],
       shrinkWrap: true,
     );
-    return Text('You have ${_messages.length} messages');
   }
 }
 
