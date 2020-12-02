@@ -91,7 +91,6 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
       Widget appBar;
       if (Platform.isIOS) {
-        /// TODO Handle bug where tile catches onTap instead of app bar's action
         appBar = CupertinoSliverNavigationBar(
             backgroundColor: Theme.of(context)
                 .colorScheme
