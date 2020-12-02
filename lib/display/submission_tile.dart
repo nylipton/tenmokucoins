@@ -13,7 +13,7 @@ class SubmissionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget w, leading, trailing;
+    Widget tile, leading, trailing;
 
     var avatarBackgroundColor = _submissionWrapper.hasMatch
         ? Theme.of(context).colorScheme.secondary
@@ -50,28 +50,28 @@ class SubmissionTile extends StatelessWidget {
           baseline: TextBaseline.alphabetic);
     }).toList();
 
-    w = ListTile(
-        leading: leading,
-        title: Text.rich(
-          TextSpan(
-              text: _submissionWrapper.title + ' ',
-              children: tagWidgets.toList()),
-        ),
-        subtitle: Text(_submissionWrapper.subtitle),
-        dense: true,
-        trailing: trailing);
+    tile = Material(
+      child: ListTile(
+          leading: leading,
+          title: Text.rich(
+            TextSpan(
+                text: _submissionWrapper.title + ' ',
+                children: tagWidgets.toList()),
+          ),
+          subtitle: Text(_submissionWrapper.subtitle),
+          dense: true,
+          trailing: trailing),
+    );
 
     /// the column is to include a divider
-    w = Column(
+    return Column(
       children: [
-        w,
+        tile,
         Divider(
           height: 0,
         )
       ],
     );
-
-    return w;
   }
 
   /// used to launch the browser
