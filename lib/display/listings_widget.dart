@@ -42,6 +42,8 @@ class ListingsWidgetState extends State<ListingsWidget> {
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, about];
 
+  static const listings_title = 'Posts' ;
+
   /// Key used in shared_preferences to store the user's tags
   static const tagsKey = 'user_tags';
 
@@ -98,7 +100,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
                     .of(context)
                     .colorScheme
                     .primary, // TODO See if this can be removed on iOS
-                largeTitle: Text(widget.title),
+                largeTitle: const Text(listings_title),
                 trailing: Material(
                   color: Theme
                       .of(context)
@@ -132,7 +134,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
             appBar = SliverAppBar(
               elevation: 1.0,
               title: Text(
-                widget.title,
+                listings_title,
                 style: TextStyle(color: Theme
                     .of(context)
                     .colorScheme
