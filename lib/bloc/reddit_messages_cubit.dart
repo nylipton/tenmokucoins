@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:draw/draw.dart';
 import 'package:equatable/equatable.dart';
@@ -11,16 +13,21 @@ part 'reddit_messages_state.dart';
 class RedditMessagesCubit extends Cubit<BaseRedditMessagesState> {
   final Logger logger = Logger();
 
+  RedditWrapper _redditWrapper;
+
+  StreamSubscription _redditWrapperSubscription;
+
   RedditMessagesCubit() : super(UnauthenticatedUserState());
 
-  void setRedditClientCubit({RedditClientCubit clientCubit}) {
-    clientCubit.listen((redditWrapper) {
+  void setRedditClientCubit({@required RedditClientCubit clientCubit}) {
+    logger.d(
+        'Setting redditClientCubit to $clientCubit. Listening for status updates.');
+    _redditWrapperSubscription = clientCubit.listen((redditWrapper) {
+      _redditWrapper = redditWrapper;
       if (redditWrapper != null && redditWrapper.isAuthenticated()) {
         logger.d(
             'Notified of an updated authenticated Reddit user by RedditClientCubit.');
-        emit(UpdatedRedditMessagesState([]));
-        var messageStream = redditWrapper.reddit.inbox.messages();
-        messageStream.listen((msg) => _processNewMessage(msg));
+        refresh(reddit: redditWrapper.reddit);
       } else {
         logger.d(
             'Notified of an unauthenticated Reddit user by RedditClientCubit.');
@@ -29,8 +36,24 @@ class RedditMessagesCubit extends Cubit<BaseRedditMessagesState> {
     });
   }
 
+  /// Refreshes the list of messages
+  void refresh({Reddit reddit}) {
+    reddit ??= _redditWrapper?.reddit;
+    if (_redditWrapper.isAuthenticated()) {
+      emit(UpdatedRedditMessagesState([]));
+      var messageStream = reddit.inbox.messages();
+      messageStream?.listen((msg) => _processNewMessage(msg));
+    } else {
+      logger.e('Reddit isn\'t authenticated');
+    }
+  }
+
   void _processNewMessage(Message msg) {
     emit(UpdatedRedditMessagesState.constructWithNewMessage(
         oldState: state, message: msg));
+  }
+
+  void dispose() {
+    _redditWrapperSubscription.cancel();
   }
 }
