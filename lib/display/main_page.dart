@@ -54,7 +54,7 @@ class _MainPageState extends State<MainPage> {
           children: [
             ListingsWidget(widget.title),
             MessagesWidget(widget.title),
-            Center(child: Text('more'))
+            const Center(child: Text('more'))
           ],
         )
       ),
