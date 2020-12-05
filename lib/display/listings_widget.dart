@@ -16,9 +16,7 @@ import 'package:tenmoku_coins/main.dart';
 
 /// The main component of the page that shows listings (i.e. submissions).
 class ListingsWidget extends StatefulWidget {
-  final String title;
-
-  ListingsWidget(this.title);
+  ListingsWidget();
 
   @override
   State<StatefulWidget> createState() => ListingsWidgetState();

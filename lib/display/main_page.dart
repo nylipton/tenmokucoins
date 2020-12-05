@@ -53,8 +53,8 @@ class _MainPageState extends State<MainPage> {
         child: IndexedStack(
           index: _selectedTab,
           children: [
-            ListingsWidget(widget.title),
-            MessagesWidget(widget.title),
+            ListingsWidget(),
+            MessagesWidget(),
             const Center(child: Text('more'))
           ],
         )
