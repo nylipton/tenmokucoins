@@ -7,6 +7,10 @@ import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/bloc/reddit_messages_cubit.dart';
 import 'dart:io';
 
+import 'package:tenmoku_coins/display/DateTimeFormatter.dart';
+
+import '../main.dart';
+
 class MessagesWidget extends StatefulWidget {
   final String title;
 
@@ -44,6 +48,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           } else {
             _authenticated = true;
             _messages = state.messages;
+            _messages.sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
           }
         });
       },
@@ -145,6 +150,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   }
 }
 
+/// Represents an individual message
 class MessageTile extends StatelessWidget {
   final Message message;
 
@@ -157,15 +163,14 @@ class MessageTile extends StatelessWidget {
         Material(
           child: ListTile(
               title: Text.rich(
-                TextSpan(
-                    text: message.subject ),
+                TextSpan(text: message.subject),
               ),
-              subtitle: Text(message.author),
+              subtitle: Text('From ${message.author} To ${message.destination } Sent: ${DateTimeFormatter.dateFormat.format(message.createdUtc)}'),
               dense: true,
               trailing: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   // TODO figure out why this is taking over taps even if the appbar is over it
-                  onTap: () => logger.d( '*** TODO: look at message'),
+                  onTap: () => Navigator.pushNamed( context, TenmokuRouter.messageRoute, arguments: message ) ,
                   child: Icon(
                     Icons.keyboard_arrow_right,
                   ))),

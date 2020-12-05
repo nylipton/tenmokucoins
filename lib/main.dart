@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/display/home_page.dart';
+import 'package:tenmoku_coins/display/message_page_widget.dart';
 
 import 'display/interests_page.dart';
 
@@ -81,23 +82,28 @@ class MyApp extends StatelessWidget {
               DefaultWidgetsLocalizations.delegate,
             ],
             title: 'Tenmoku Coins',
-            onGenerateRoute: (settings) => Router.generateRoute(true, settings),
-            initialRoute: Router.homeRoute,
+            onGenerateRoute: (settings) =>
+                TenmokuRouter.generateRoute(true, settings),
+            initialRoute: TenmokuRouter.homeRoute,
           ));
     } else {
       return MaterialApp(
         title: 'Tenmoku Coin Trader',
         theme: theme,
-        onGenerateRoute: (settings) => Router.generateRoute(false, settings),
-        initialRoute: Router.homeRoute,
+        onGenerateRoute: (settings) =>
+            TenmokuRouter.generateRoute(false, settings),
+        initialRoute: TenmokuRouter.homeRoute,
       );
     }
   }
 }
 
-class Router {
+class TenmokuRouter {
   static const String homeRoute = '/';
-  static const String filterRoute = '/filter';
+  /// The interests page, which lets users select what tags they are interested in
+  static const String interestsRoute = '/filter';
+  /// The message page, which lets users see a message and the replies
+  static const String messageRoute = '/message';
 
   static Route<dynamic> generateRoute(bool iOS, RouteSettings settings) {
     PageRoute route;
@@ -109,7 +115,7 @@ class Router {
             : MaterialPageRoute(builder: (_) => HomePage());
 
         break;
-      case filterRoute:
+      case interestsRoute:
         var tags = settings.arguments;
         route = (iOS)
             ? CupertinoPageRoute(
@@ -118,6 +124,15 @@ class Router {
                 fullscreenDialog: true, builder: (_) => InterestsPage(tags));
 
         break;
+      case messageRoute:
+        var message = settings.arguments;
+        route = (iOS)
+            ? CupertinoPageRoute(
+                fullscreenDialog: true, builder: (_) => MessagePageWidget(message))
+            : MaterialPageRoute(
+                fullscreenDialog: true, builder: (_) => MessagePageWidget(message));
+        break;
+
       default:
         route = MaterialPageRoute(
             builder: (_) => Scaffold(

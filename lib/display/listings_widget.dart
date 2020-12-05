@@ -12,6 +12,7 @@ import 'package:tenmoku_coins/bloc/subreddit_bloc.dart';
 import 'package:tenmoku_coins/display/about_widget.dart';
 import 'package:tenmoku_coins/display/submission_tile.dart';
 import 'package:tenmoku_coins/display/submission_wrapper.dart';
+import 'package:tenmoku_coins/main.dart';
 
 /// The main component of the page that shows listings (i.e. submissions).
 class ListingsWidget extends StatefulWidget {
@@ -227,7 +228,7 @@ class ListingsWidgetState extends State<ListingsWidget> {
   void _highlight() async {
     logger.d('Filter main submissions list selected');
     final result =
-    await Navigator.pushNamed(context, '/filter', arguments: _tags);
+    await Navigator.pushNamed(context, TenmokuRouter.interestsRoute, arguments: _tags);
     logger.d('Filter dialog returned $result');
     if (result != null) {
       setState(() {

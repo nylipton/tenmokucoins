@@ -40,6 +40,7 @@ class _MainPageState extends State<MainPage> {
     super.dispose();
   }
 
+  // TODO add FAB if MessagesWidget is selected and user is logged-in
   @override
   Widget build(BuildContext context) {
     return Scaffold(
