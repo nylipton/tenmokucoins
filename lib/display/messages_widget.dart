@@ -12,9 +12,7 @@ import 'package:tenmoku_coins/display/DateTimeFormatter.dart';
 import '../main.dart';
 
 class MessagesWidget extends StatefulWidget {
-  final String title;
-
-  MessagesWidget(this.title);
+  MessagesWidget();
 
   @override
   _MessagesWidgetState createState() => _MessagesWidgetState();
@@ -25,10 +23,16 @@ final Logger logger = Logger();
 class _MessagesWidgetState extends State<MessagesWidget> {
   // State variables
   List<Message> _messages;
-  bool _authenticated;
+  int _numNew;
 
-  _MessagesWidgetState() {
+  bool _authenticated;
+  static const _title = 'Messages';
+
+  @override
+  void initState() {
+    super.initState();
     _messages = [];
+    _numNew = 0;
     _authenticated = false;
     logger.v('Creating new _MessagesWidgetState object');
   }
@@ -49,6 +53,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             _authenticated = true;
             _messages = state.messages;
             _messages.sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
+            _numNew = _messages
+                .map((m) => (m.newItem ? 1 : 0))
+                .reduce((a, b) => a + b);
           }
         });
       },
@@ -63,7 +70,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         if (Platform.isIOS) _iOSRefresh(context),
         SliverList(
           delegate: SliverChildBuilderDelegate(
-            (_, index) {
+                (_, index) {
               return MessageTile(_messages[index]);
             },
             childCount: _messages.length,
@@ -76,77 +83,37 @@ class _MessagesWidgetState extends State<MessagesWidget> {
 
   Widget _iOSRefresh(BuildContext context) {
     return CupertinoSliverRefreshControl(
-        onRefresh: () => Future<void>(
-            () => BlocProvider.of<RedditMessagesCubit>(context).refresh()));
+        onRefresh: () =>
+            Future<void>(
+                    () =>
+                    BlocProvider.of<RedditMessagesCubit>(context).refresh()));
   }
 
   Widget _navbar(BuildContext context) {
+    String title = _title;
+    if (_numNew != 0) {
+      title += ' (${_numNew} new)';
+    }
     if (Platform.isIOS) {
       return CupertinoSliverNavigationBar(
-          backgroundColor: Theme.of(context)
+          backgroundColor: Theme
+              .of(context)
               .colorScheme
               .primary, // TODO See if this can be removed on iOS
-          largeTitle: Text('Messages'),
-          trailing: Material(
-              color: Theme.of(context).colorScheme.primary,
-              child: _newCupertinoMessageIconButton()));
+          largeTitle: Text(title));
     } else {
       return SliverAppBar(
         elevation: 1.0,
         title: Text(
-          widget.title,
-          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          title,
+          style: TextStyle(color: Theme
+              .of(context)
+              .colorScheme
+              .onPrimary),
         ),
         pinned: false,
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.plus_one_outlined),
-            tooltip: 'New Message',
-            onPressed: () => _composeMessage(context),
-          ), /*
-          PopupMenuButton<String>(
-            onSelected: _overflowMenuAction,
-            itemBuilder: (_) {
-              var redditWrapper =
-                  BlocProvider
-                      .of<RedditClientCubit>(context)
-                      .state;
-              Widget accountField;
-              accountField = (redditWrapper.isAuthenticated())
-                  ? FutureBuilder(
-                  future: redditWrapper.getUsername(),
-                  initialData: 'Reddit account: loading',
-                  builder: (_, AsyncSnapshot<String> data) {
-                    return data.hasData
-                        ? Text(data.data)
-                        : Text('Loading Reddit account');
-                  })
-                  : Text('Login to Reddit');
-              return <PopupMenuItem<String>>[
-                PopupMenuItem<String>(
-                  value: overflowMenu[0],
-                  child: accountField,
-                  enabled: !redditWrapper.isAuthenticated(),
-                ),
-                PopupMenuItem<String>(
-                    value: overflowMenu[1], child: Text(overflowMenu[1]))
-              ];*/
-          // },
-          // )
-        ],
       );
     }
-  }
-
-  void _composeMessage(BuildContext context) {}
-
-  Widget _newCupertinoMessageIconButton() {
-    return IconButton(
-        icon: const Icon(
-          CupertinoIcons.pencil_circle_fill,
-        ),
-        onPressed: () {},
-        color: Theme.of(context).colorScheme.onPrimary);
   }
 }
 
@@ -181,8 +148,10 @@ class MessageTile extends StatelessWidget {
                 .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
             children: firstlineChildren),
       ),
-      Expanded(child: Container(),),
-      Text( DateTimeFormatter.dateFormat.format(message.createdUtc))
+      Expanded(
+        child: Container(),
+      ),
+      Text(DateTimeFormatter.dateFormat.format(message.createdUtc))
     ]);
 
     return Column(
