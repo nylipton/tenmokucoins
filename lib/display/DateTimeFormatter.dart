@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 /// Use this to format a [DateTime] to a [String]
 class DateTimeFormatter {
   static DateFormat timeFormat = DateFormat.jm();
-
+  static DateFormat dateFormat = DateFormat.yMd() ;
   static DateFormat dateAndTimeFormat = DateFormat.yMd().add_jm();
 
   static String format(DateTime tm) {
