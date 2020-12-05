@@ -158,19 +158,49 @@ class MessageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int replies = 0;
+    List<InlineSpan> firstlineChildren = [];
+    try {
+      replies = message.replies.length;
+      if (replies > 0) {
+        firstlineChildren = [
+          TextSpan(
+              text: '  (${replies.toString()})',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100)),
+        ];
+      }
+    } catch (e) {
+      logger.v('no replies to message');
+    }
+    Widget titleWidget = Row(children: [
+      RichText(
+        text: TextSpan(
+            text: message.author,
+            style: DefaultTextStyle.of(context)
+                .style
+                .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+            children: firstlineChildren),
+      ),
+      Expanded(child: Container(),),
+      Text( DateTimeFormatter.dateFormat.format(message.createdUtc))
+    ]);
+
     return Column(
       children: [
         Material(
           child: ListTile(
-              title: Text.rich(
-                TextSpan(text: message.subject),
-              ),
-              subtitle: Text('From ${message.author} To ${message.destination } Sent: ${DateTimeFormatter.dateFormat.format(message.createdUtc)}'),
+              title: titleWidget,
+              subtitle: RichText(
+                  text: TextSpan(
+                text: message.subject,
+                style: DefaultTextStyle.of(context).style,
+              )),
               dense: true,
               trailing: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  // TODO figure out why this is taking over taps even if the appbar is over it
-                  onTap: () => Navigator.pushNamed( context, TenmokuRouter.messageRoute, arguments: message ) ,
+                  onTap: () => Navigator.pushNamed(
+                      context, TenmokuRouter.messageRoute,
+                      arguments: message),
                   child: Icon(
                     Icons.keyboard_arrow_right,
                   ))),
