@@ -21,7 +21,7 @@ class RedditMessagesCubit extends Cubit<BaseRedditMessagesState> {
 
   void setRedditClientCubit({@required RedditClientCubit clientCubit}) {
     if (clientCubit.state != null) {
-      if (clientCubit?.state?.isAuthenticated()) {
+      if (clientCubit.state.isAuthenticated()) {
         logger.d('Reddit is authenticated');
         _redditWrapper = clientCubit.state ;
         refresh(reddit: clientCubit.state.reddit);
