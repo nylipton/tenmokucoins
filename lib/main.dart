@@ -101,7 +101,7 @@ class MyApp extends StatelessWidget {
 class TenmokuRouter {
   static const String homeRoute = '/';
   /// The interests page, which lets users select what tags they are interested in
-  static const String interestsRoute = '//interests';
+  static const String interestsRoute = '/interests';
   /// The message page, which lets users see a message and the replies
   static const String messageRoute = '/message';
 
