@@ -10,11 +10,16 @@ void showCupertinoAbout({BuildContext context}) {
             content: AboutWidget(),
             actions: <Widget>[
               CupertinoDialogAction(
-                  child: Text('Licenses'),
-                  onPressed: () => showLicensePage(context: context)),
+                child: Text('Licenses'),
+                onPressed: () {
+                  Navigator.of(c, rootNavigator: true).pop(false);
+                  showLicensePage(context: context);
+                },
+              ),
               CupertinoDialogAction(
                 child: Text('OK'),
-                onPressed: () => Navigator.of(c).pop(false),
+                onPressed: () =>
+                    Navigator.of(c, rootNavigator: true).pop(false),
               )
             ]);
       });
