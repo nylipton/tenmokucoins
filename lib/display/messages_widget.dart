@@ -24,6 +24,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   // State variables
   List<Message> _messages;
   int _numNew;
+  RedditWrapper _redditWrapper;
 
   bool _authenticated;
   static const _title = 'Messages';
@@ -34,6 +35,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     _messages = [];
     _numNew = 0;
     _authenticated = false;
+    _redditWrapper = null;
     logger.v('Creating new _MessagesWidgetState object');
   }
 
@@ -42,23 +44,34 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     Widget widget = _authenticated
         ? _messagesWidget()
         : Center(child: UnauthenticatedWidget());
-    return BlocListener<RedditMessagesCubit, BaseRedditMessagesState>(
-      listener: (BuildContext context, state) {
-        setState(() {
-          if (state is UnauthenticatedUserState) {
-            _authenticated = false;
-            RedditClientCubit redditCubit = BlocProvider.of(context);
-            redditCubit.authenticate();
-          } else {
-            _authenticated = true;
-            _messages = state.messages;
-            _messages.sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
-            _numNew = _messages.isNotEmpty ? _messages
-                .map((m) => (m.newItem ? 1 : 0))
-                .reduce((a, b) => a + b) : 0;
-          }
-        });
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<RedditMessagesCubit, BaseRedditMessagesState>(
+            listener: (BuildContext context, state) {
+          setState(() {
+            if (state is UnauthenticatedUserState) {
+              _authenticated = false;
+              RedditClientCubit redditCubit = BlocProvider.of(context);
+              redditCubit.authenticate();
+            } else {
+              _authenticated = true;
+              _messages = state.messages;
+              _messages
+                  .sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
+              _numNew = _messages.isNotEmpty
+                  ? _messages
+                      .map((m) => (m.newItem ? 1 : 0))
+                      .reduce((a, b) => a + b)
+                  : 0;
+            }
+          });
+        }),
+        BlocListener<RedditClientCubit, RedditWrapper>(
+            listener: (_, redditWrapper) {
+          logger.d('Got assigned a reddit wrapper of $redditWrapper');
+          setState(() => _redditWrapper = redditWrapper);
+        })
+      ],
       child: widget,
     );
   }
@@ -66,12 +79,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
   Widget _messagesWidget() {
     return CustomScrollView(
       slivers: [
-        _navbar(context),
+        _navigationBar(context),
         if (Platform.isIOS) _iOSRefresh(context),
         SliverList(
           delegate: SliverChildBuilderDelegate(
-                (_, index) {
-              return MessageTile(_messages[index]);
+            (_, index) {
+              return MessageTile(_messages[index], _redditWrapper?.reddit);
             },
             childCount: _messages.length,
           ),
@@ -83,13 +96,11 @@ class _MessagesWidgetState extends State<MessagesWidget> {
 
   Widget _iOSRefresh(BuildContext context) {
     return CupertinoSliverRefreshControl(
-        onRefresh: () =>
-            Future<void>(
-                    () =>
-                    BlocProvider.of<RedditMessagesCubit>(context).refresh()));
+        onRefresh: () => Future<void>(
+            () => BlocProvider.of<RedditMessagesCubit>(context).refresh()));
   }
 
-  Widget _navbar(BuildContext context) {
+  Widget _navigationBar(BuildContext context) {
     String title = _title;
     if (_numNew != 0) {
       title += ' (${_numNew} new)';
@@ -98,8 +109,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
       return CupertinoSliverNavigationBar(
           heroTag: 'message_list_page',
           transitionBetweenRoutes: false,
-          backgroundColor: Theme
-              .of(context)
+          backgroundColor: Theme.of(context)
               .colorScheme
               .primary, // TODO See if this can be removed on iOS
           largeTitle: Text(title));
@@ -108,10 +118,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
         elevation: 1.0,
         title: Text(
           title,
-          style: TextStyle(color: Theme
-              .of(context)
-              .colorScheme
-              .onPrimary),
+          style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
         ),
         pinned: false,
       );
@@ -121,18 +128,26 @@ class _MessagesWidgetState extends State<MessagesWidget> {
 
 /// Represents an individual message
 class MessageTile extends StatelessWidget {
-  final Message message;
+  final Message _message;
+  final Reddit _reddit;
+  static const default_img_url =
+      'https://www.redditstatic.com/avatars/avatar_default_15_DB0064.png';
+  final defaultAvatar;
 
-  MessageTile(this.message);
+  MessageTile(this._message, this._reddit)
+      : defaultAvatar = const CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.transparent,
+            backgroundImage: NetworkImage(default_img_url));
 
   @override
   Widget build(BuildContext context) {
     int replies = 0;
-    List<InlineSpan> firstlineChildren = [];
+    List<InlineSpan> firstLineChildren = [];
     try {
-      replies = message.replies.length;
+      replies = _message.replies.length;
       if (replies > 0) {
-        firstlineChildren = [
+        firstLineChildren = [
           TextSpan(
               text: '  (${replies.toString()})',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100)),
@@ -141,34 +156,53 @@ class MessageTile extends StatelessWidget {
     } catch (e) {
       logger.v('no replies to message');
     }
-    Widget titleWidget = Row(children: [
+    var titleWidget = Row(children: [
       RichText(
         text: TextSpan(
-            text: message.author,
-            style: DefaultTextStyle
-                .of(context)
+            text: _message.author,
+            style: DefaultTextStyle.of(context)
                 .style
                 .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-            children: firstlineChildren),
+            children: firstLineChildren),
       ),
       Expanded(
         child: Container(),
       ),
-      Text(DateTimeFormatter.dateFormat.format(message.createdUtc))
+      Text(DateTimeFormatter.dateFormat.format(_message.createdUtc))
     ]);
 
+    RegExp regExp = RegExp("^(.*?)\.(jpg|png|gif)");
+    var avatar = FutureBuilder<Redditor>(
+        initialData: null,
+        future: _reddit.redditor(_message.author).populate(),
+        builder: (BuildContext context, AsyncSnapshot<Redditor> snapshot) {
+          var avatar = defaultAvatar;
+          if (snapshot.hasData) {
+            var rawImageUrl = snapshot.data.data['icon_img'];
+            if (rawImageUrl != null) {
+              var match = regExp.firstMatch(rawImageUrl);
+              var imageUrl = match?.group(0) ?? default_img_url;
+              avatar = CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.transparent,
+                backgroundImage: NetworkImage(imageUrl),
+              );
+            }
+          }
+          return avatar;
+        });
     return Column(
       children: [
         Material(
           child: ListTile(
+            key: ValueKey('message_tile_${_message.id}'),
+              leading: avatar,
               title: titleWidget,
               subtitle: RichText(
                   text: TextSpan(
-                    text: message.subject,
-                    style: DefaultTextStyle
-                        .of(context)
-                        .style,
-                  )),
+                text: _message.subject,
+                style: DefaultTextStyle.of(context).style,
+              )),
               dense: true,
               trailing: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -176,11 +210,10 @@ class MessageTile extends StatelessWidget {
                     if (Platform.isIOS) {
                       Navigator.of(context, rootNavigator: true).pushNamed(
                           TenmokuRouter.messageRoute,
-                          arguments: message);
+                          arguments: _message);
                     } else {
-                      Navigator.pushNamed(
-                          context, TenmokuRouter.messageRoute,
-                          arguments: message);
+                      Navigator.pushNamed(context, TenmokuRouter.messageRoute,
+                          arguments: _message);
                     }
                   },
                   child: Icon(
