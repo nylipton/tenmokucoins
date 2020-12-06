@@ -16,9 +16,13 @@ class MessagePageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget w;
+    String title = message.subject ;
+
     if (Platform.isIOS) {
       w = CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
+          transitionBetweenRoutes: false,
+          heroTag: 'message_page',
           backgroundColor: Theme.of(context).colorScheme.primary,
           actionsForegroundColor: Theme.of(context).colorScheme.onPrimary,
         ),
@@ -26,7 +30,7 @@ class MessagePageWidget extends StatelessWidget {
       );
     } else {
       // Material implementation
-      w = Scaffold(appBar: AppBar(), body: _messageList());
+      w = Scaffold(appBar: AppBar(title: Text( title )), body: _messageList());
     }
     return w;
   }
@@ -48,41 +52,43 @@ class MessagePageWidget extends StatelessWidget {
     return ListView.builder(
       itemBuilder: (BuildContext context, int index) {
         Message msg = index == 0 ? message : message.replies[index - 1];
-        return ExpansionTile(
-          key: ValueKey(msg.id),
-          title: RichText(
-              text: TextSpan(
-            text: msg.author,
-            style: DefaultTextStyle.of(context)
-                .style
-                .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
-          )),
-          subtitle: RichText(
-              text: TextSpan(
-                  text:
-                      'sent ${DateTimeFormatter.dateFormat.format(msg.createdUtc)}',
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                TextSpan(text: ' to '),
-                TextSpan(
-                  text: msg.destination,
-                ),
-              ])),
-          initiallyExpanded: true,
-          childrenPadding: const EdgeInsets.fromLTRB(15, 0, 15, 10),
-          children: [
-            Container(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Divider(),
-                  Text(
-                    msg.body,
+        return Material(
+          child: ExpansionTile(
+            key: ValueKey(msg.id),
+            title: RichText(
+                text: TextSpan(
+              text: msg.author,
+              style: DefaultTextStyle.of(context)
+                  .style
+                  .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+            )),
+            subtitle: RichText(
+                text: TextSpan(
+                    text:
+                        'sent ${DateTimeFormatter.dateFormat.format(msg.createdUtc)}',
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                  TextSpan(text: ' to '),
+                  TextSpan(
+                    text: msg.destination,
                   ),
-                ],
+                ])),
+            initiallyExpanded: true,
+            childrenPadding: const EdgeInsets.fromLTRB(15, 0, 15, 10),
+            children: [
+              Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Divider(),
+                    Text(
+                      msg.body,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
       itemCount: numReplies + 1,

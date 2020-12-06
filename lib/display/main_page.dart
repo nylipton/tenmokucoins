@@ -6,9 +6,12 @@ import 'package:logger/logger.dart';
 import 'package:tenmoku_coins/bloc/reddit_client_cubit.dart';
 import 'package:tenmoku_coins/display/navigation_index_cubit.dart';
 
-import 'home_app_bar.dart';
 import 'listings_widget.dart';
 import 'messages_widget.dart';
+import 'dart:io';
+
+final GlobalKey<NavigatorState> firstTabNavKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> secondTabNavKey = GlobalKey<NavigatorState>();
 
 /// Shows a list of postings and messages from Reddit.
 class MainPage extends StatefulWidget {
@@ -43,23 +46,81 @@ class _MainPageState extends State<MainPage> {
   // TODO add FAB if MessagesWidget is selected and user is logged-in
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<NavigationIndexCubit, int>(
-              listener: (context, index) =>
-                  setState(() => _selectedTab = index))
-        ],
-        child: IndexedStack(
-          index: _selectedTab,
-          children: [
-            ListingsWidget(),
-            MessagesWidget(),
-            const Center(child: Text('more'))
+    if (Platform.isIOS) {
+      return CupertinoTabScaffold(
+        tabBar: CupertinoTabBar(
+          onTap: (index) {
+            if (_selectedTab == index) {
+              switch (index) {
+                case 0:
+                  firstTabNavKey.currentState.popUntil((r) => r.isFirst);
+                  break;
+                case 1:
+                  secondTabNavKey.currentState.popUntil((r) => r.isFirst);
+                  break;
+                default:
+                  logger.e('Unknown tab index $index selected');
+              }
+            }
+            _selectedTab = index;
+          },
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.list_bullet),
+              label: 'Posts',
+            ),
+            BottomNavigationBarItem(
+                icon: Icon(CupertinoIcons.conversation_bubble),
+                label: 'Messages'),
           ],
-        )
-      ),
-      bottomNavigationBar: HomeAppBar(),
-    );
+          backgroundColor: Theme.of(context).colorScheme.background,
+          activeColor: Theme.of(context).colorScheme.primaryVariant,
+          inactiveColor: Theme.of(context).colorScheme.onBackground,
+        ),
+        tabBuilder: (context, index) {
+          var page = (index == 0) ? ListingsWidget() : MessagesWidget();
+          var key = (index == 0) ? firstTabNavKey : secondTabNavKey;
+          return CupertinoTabView(
+            navigatorKey: key,
+            builder: (context) {
+              return CupertinoPageScaffold(
+                child: page,
+              );
+            },
+          );
+        },
+      );
+    } else {
+      return Scaffold(
+        body: MultiBlocListener(
+            listeners: [
+              BlocListener<NavigationIndexCubit, int>(
+                  listener: (context, index) =>
+                      setState(() => _selectedTab = index))
+            ],
+            child: IndexedStack(
+              index: _selectedTab,
+              children: [
+                ListingsWidget(),
+                MessagesWidget(),
+                const Center(child: Text('more'))
+              ],
+            )),
+        bottomNavigationBar:
+            BlocBuilder<NavigationIndexCubit, int>(builder: (context, index) {
+          return BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Posts'),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.message), label: 'Messages'),
+            ],
+            currentIndex: index,
+            onTap: (index) =>
+                BlocProvider.of<NavigationIndexCubit>(context).setIndex(index),
+            // backgroundColor: Theme.of( context ).colorScheme.primary,
+          );
+        }),
+      );
+    }
   }
 }

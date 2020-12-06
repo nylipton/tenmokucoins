@@ -41,14 +41,14 @@ class ListingsWidgetState extends State<ListingsWidget> {
   /// Overflow menu options
   static const List<String> overflowMenu = [accounts, about];
 
-  static const listings_title = 'Posts' ;
+  static const listings_title = 'Posts';
 
   /// Key used in shared_preferences to store the user's tags
   static const tagsKey = 'user_tags';
 
   /// This will load up [SharedPreferences] when ready.
   final Future<SharedPreferences> _futureprefs =
-  SharedPreferences.getInstance();
+      SharedPreferences.getInstance();
 
   /// Used to save tags locally on the device
   SharedPreferences _prefs;
@@ -76,86 +76,72 @@ class ListingsWidgetState extends State<ListingsWidget> {
 
     _subredditListLoadingStateStream =
         BlocProvider.of<SubredditBloc>(context).listen((state) {
-          setState(() {
-            _isLoading = (state is SubredditListLoadingState);
-          });
-        });
+      setState(() {
+        _isLoading = (state is SubredditListLoadingState);
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     Widget w = BlocBuilder<SubredditBloc, SubredditListState>(
         builder: (_, SubredditListState state) {
-          List<SubmissionWrapper> listWrappers = state.submissions
-              .map((s) => SubmissionWrapper(item: s, tags: _tags))
-              .toList(growable: false);
+      List<SubmissionWrapper> listWrappers = state.submissions
+          .map((s) => SubmissionWrapper(item: s, tags: _tags))
+          .toList(growable: false);
 
-          List<Widget> sliverlist = [];
+      List<Widget> sliverlist = [];
 
-          Widget appBar;
-          if (Platform.isIOS) {
-            appBar = CupertinoSliverNavigationBar(
-                backgroundColor: Theme
-                    .of(context)
-                    .colorScheme
-                    .primary, // TODO See if this can be removed on iOS
-                largeTitle: const Text(listings_title),
-                trailing: Material(
-                  color: Theme
-                      .of(context)
-                      .colorScheme
-                      .primary,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(CupertinoIcons.heart_circle,
-                            color: Theme
-                                .of(context)
-                                .colorScheme
-                                .onPrimary),
-                        tooltip: 'Interests',
-                        onPressed: _highlight,
-                      ),
-                      IconButton(
-                        icon: Icon(CupertinoIcons.info_circle,
-                            color: Theme
-                                .of(context)
-                                .colorScheme
-                                .onPrimary),
-                        tooltip: 'Info',
-                        onPressed: () => showCupertinoAbout(context: context),
-                      ),
-                    ],
+      Widget appBar;
+      if (Platform.isIOS) {
+        appBar = CupertinoSliverNavigationBar(
+            heroTag: 'listings_page',
+            transitionBetweenRoutes: false,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            // TODO See if this can be removed on iOS
+            largeTitle: const Text(listings_title),
+            trailing: Material(
+              color: Theme.of(context).colorScheme.primary,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(CupertinoIcons.heart_circle,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                    tooltip: 'Interests',
+                    onPressed: _highlight,
                   ),
-                ));
-          } else {
-            appBar = SliverAppBar(
-              elevation: 1.0,
-              title: Text(
-                listings_title,
-                style: TextStyle(color: Theme
-                    .of(context)
-                    .colorScheme
-                    .onPrimary),
+                  IconButton(
+                    icon: Icon(CupertinoIcons.info_circle,
+                        color: Theme.of(context).colorScheme.onPrimary),
+                    tooltip: 'Info',
+                    onPressed: () => showCupertinoAbout(context: context),
+                  ),
+                ],
               ),
-              pinned: false,
-              actions: <Widget>[
-                IconButton(
-                  icon: const Icon(Icons.rule),
-                  tooltip: 'Interests',
-                  onPressed: _highlight,
-                ),
-                PopupMenuButton<String>(
-                  onSelected: _overflowMenuAction,
-                  itemBuilder: (_) {
-                    var redditWrapper =
-                        BlocProvider
-                            .of<RedditClientCubit>(context)
-                            .state;
-                    Widget accountField;
-                    accountField = (redditWrapper.isAuthenticated())
-                        ? FutureBuilder(
+            ));
+      } else {
+        appBar = SliverAppBar(
+          elevation: 1.0,
+          title: Text(
+            listings_title,
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+          ),
+          pinned: false,
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.rule),
+              tooltip: 'Interests',
+              onPressed: _highlight,
+            ),
+            PopupMenuButton<String>(
+              onSelected: _overflowMenuAction,
+              itemBuilder: (_) {
+                var redditWrapper =
+                    BlocProvider.of<RedditClientCubit>(context).state;
+                Widget accountField;
+                accountField = (redditWrapper.isAuthenticated())
+                    ? FutureBuilder(
                         future: redditWrapper.getUsername(),
                         initialData: 'Reddit account: loading',
                         builder: (_, AsyncSnapshot<String> data) {
@@ -163,60 +149,58 @@ class ListingsWidgetState extends State<ListingsWidget> {
                               ? Text(data.data)
                               : Text('Loading Reddit account');
                         })
-                        : Text('Login to Reddit');
-                    return <PopupMenuItem<String>>[
-                      PopupMenuItem<String>(
-                        value: overflowMenu[0],
-                        child: accountField,
-                        enabled: !redditWrapper.isAuthenticated(),
-                      ),
-                      PopupMenuItem<String>(
-                          value: overflowMenu[1], child: Text(overflowMenu[1]))
-                    ];
-                  },
-                )
-              ],
-            );
-          }
-          sliverlist.add(appBar);
-
-          if (Platform.isIOS) {
-            sliverlist.add(CupertinoSliverRefreshControl(
-              onRefresh: () =>
-                  Future<void>(() =>
-                      BlocProvider.of<SubredditBloc>(context)
-                          .add(SubredditListClearEvent())),
-            ));
-          }
-          // this is the actual list of submissions
-          sliverlist.add(SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                // if we're near the end, request more submissions from Reddit
-                if ((listWrappers.length - _nextPageThreshold) == index) {
-                  BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListLoadSubmissions(numberToLoad: 10));
-                }
-                // generate the tile for the submission
-                return createListTile(listWrappers, index);
+                    : Text('Login to Reddit');
+                return <PopupMenuItem<String>>[
+                  PopupMenuItem<String>(
+                    value: overflowMenu[0],
+                    child: accountField,
+                    enabled: !redditWrapper.isAuthenticated(),
+                  ),
+                  PopupMenuItem<String>(
+                      value: overflowMenu[1], child: Text(overflowMenu[1]))
+                ];
               },
-              childCount: listWrappers.length + (_isLoading ? 1 : 0),
-            ),
-          ));
+            )
+          ],
+        );
+      }
+      sliverlist.add(appBar);
 
-          return CustomScrollView(
-            slivers: sliverlist,
-            shrinkWrap: true,
-          );
-        });
+      if (Platform.isIOS) {
+        sliverlist.add(CupertinoSliverRefreshControl(
+          onRefresh: () => Future<void>(() =>
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListClearEvent())),
+        ));
+      }
+      // this is the actual list of submissions
+      sliverlist.add(SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            // if we're near the end, request more submissions from Reddit
+            if ((listWrappers.length - _nextPageThreshold) == index) {
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListLoadSubmissions(numberToLoad: 10));
+            }
+            // generate the tile for the submission
+            return createListTile(listWrappers, index);
+          },
+          childCount: listWrappers.length + (_isLoading ? 1 : 0),
+        ),
+      ));
+
+      return CustomScrollView(
+        slivers: sliverlist,
+        shrinkWrap: true,
+      );
+    });
 
     // RefreshIndicator is so the list will clear and refresh when pulled down
     if (!Platform.isIOS) {
       w = RefreshIndicator(
-          onRefresh: () =>
-              Future<void>(() =>
-                  BlocProvider.of<SubredditBloc>(context)
-                      .add(SubredditListClearEvent())),
+          onRefresh: () => Future<void>(() =>
+              BlocProvider.of<SubredditBloc>(context)
+                  .add(SubredditListClearEvent())),
           child: w);
     }
     return w;
@@ -225,8 +209,11 @@ class ListingsWidgetState extends State<ListingsWidget> {
   /// Launches the interests dialog to get the tags
   void _highlight() async {
     logger.d('Filter main submissions list selected');
-    final result =
-    await Navigator.pushNamed(context, TenmokuRouter.interestsRoute, arguments: _tags);
+    final result = (Platform.isIOS)
+        ? await Navigator.of(context, rootNavigator: true)
+            .pushNamed(TenmokuRouter.interestsRoute, arguments: _tags)
+        : await Navigator.pushNamed(context, TenmokuRouter.interestsRoute,
+            arguments: _tags);
     logger.d('Filter dialog returned $result');
     if (result != null) {
       setState(() {
@@ -260,7 +247,9 @@ class ListingsWidgetState extends State<ListingsWidget> {
     } else {
       logger.d('Showing about dialog');
       showAboutDialog(
-          context: context, applicationLegalese: AboutWidget.defaultLegalese, );
+        context: context,
+        applicationLegalese: AboutWidget.defaultLegalese,
+      );
     }
   }
 

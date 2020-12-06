@@ -55,7 +55,7 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             _messages.sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
             _numNew = _messages.isNotEmpty ? _messages
                 .map((m) => (m.newItem ? 1 : 0))
-                .reduce((a, b) => a + b) : 0 ;
+                .reduce((a, b) => a + b) : 0;
           }
         });
       },
@@ -96,6 +96,8 @@ class _MessagesWidgetState extends State<MessagesWidget> {
     }
     if (Platform.isIOS) {
       return CupertinoSliverNavigationBar(
+          heroTag: 'message_list_page',
+          transitionBetweenRoutes: false,
           backgroundColor: Theme
               .of(context)
               .colorScheme
@@ -143,7 +145,8 @@ class MessageTile extends StatelessWidget {
       RichText(
         text: TextSpan(
             text: message.author,
-            style: DefaultTextStyle.of(context)
+            style: DefaultTextStyle
+                .of(context)
                 .style
                 .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
             children: firstlineChildren),
@@ -161,15 +164,25 @@ class MessageTile extends StatelessWidget {
               title: titleWidget,
               subtitle: RichText(
                   text: TextSpan(
-                text: message.subject,
-                style: DefaultTextStyle.of(context).style,
-              )),
+                    text: message.subject,
+                    style: DefaultTextStyle
+                        .of(context)
+                        .style,
+                  )),
               dense: true,
               trailing: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => Navigator.pushNamed(
-                      context, TenmokuRouter.messageRoute,
-                      arguments: message),
+                  onTap: () {
+                    if (Platform.isIOS) {
+                      Navigator.of(context, rootNavigator: true).pushNamed(
+                          TenmokuRouter.messageRoute,
+                          arguments: message);
+                    } else {
+                      Navigator.pushNamed(
+                          context, TenmokuRouter.messageRoute,
+                          arguments: message);
+                    }
+                  },
                   child: Icon(
                     Icons.keyboard_arrow_right,
                   ))),
