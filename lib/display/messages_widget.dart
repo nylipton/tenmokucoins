@@ -53,9 +53,9 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             _authenticated = true;
             _messages = state.messages;
             _messages.sort((m1, m2) => m2.createdUtc.compareTo(m1.createdUtc));
-            _numNew = _messages
+            _numNew = _messages.isNotEmpty ? _messages
                 .map((m) => (m.newItem ? 1 : 0))
-                .reduce((a, b) => a + b);
+                .reduce((a, b) => a + b) : 0 ;
           }
         });
       },
