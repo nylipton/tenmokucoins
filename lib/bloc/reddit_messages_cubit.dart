@@ -63,4 +63,6 @@ class RedditMessagesCubit extends Cubit<BaseRedditMessagesState> {
   void dispose() {
     _redditWrapperSubscription.cancel();
   }
+
+  RedditWrapper get redditWrapper => _redditWrapper;
 }

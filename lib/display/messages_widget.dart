@@ -51,9 +51,12 @@ class _MessagesWidgetState extends State<MessagesWidget> {
           setState(() {
             if (state is UnauthenticatedUserState) {
               _authenticated = false;
-              RedditClientCubit redditCubit = BlocProvider.of(context);
-              redditCubit.authenticate();
+              _messages = [];
+              _numNew = 0;
+              _redditWrapper = null;
             } else {
+              _redditWrapper =
+                  BlocProvider.of<RedditMessagesCubit>(context).redditWrapper;
               _authenticated = true;
               _messages = state.messages;
               _messages
@@ -66,18 +69,13 @@ class _MessagesWidgetState extends State<MessagesWidget> {
             }
           });
         }),
-        BlocListener<RedditClientCubit, RedditWrapper>(
-            listener: (_, redditWrapper) {
-          logger.d('Got assigned a reddit wrapper of $redditWrapper');
-          setState(() => _redditWrapper = redditWrapper);
-        })
       ],
       child: widget,
     );
   }
 
   Widget _messagesWidget() {
-    return CustomScrollView(
+    var scrollView = CustomScrollView(
       slivers: [
         _navigationBar(context),
         if (Platform.isIOS) _iOSRefresh(context),
@@ -92,6 +90,14 @@ class _MessagesWidgetState extends State<MessagesWidget> {
       ],
       shrinkWrap: true,
     );
+    if (!Platform.isIOS) {
+      return RefreshIndicator(
+          onRefresh: () => Future(
+              () => BlocProvider.of<RedditMessagesCubit>(context).refresh()),
+          child: scrollView);
+    } else {
+      return scrollView;
+    }
   }
 
   Widget _iOSRefresh(BuildContext context) {
@@ -135,7 +141,8 @@ class MessageTile extends StatelessWidget {
   final defaultAvatar;
 
   MessageTile(this._message, this._reddit)
-      : defaultAvatar = const CircleAvatar(
+      : assert(_reddit != null),
+        defaultAvatar = const CircleAvatar(
             radius: 30,
             backgroundColor: Colors.transparent,
             backgroundImage: NetworkImage(default_img_url));
@@ -143,26 +150,33 @@ class MessageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int replies = 0;
-    List<InlineSpan> firstLineChildren = [];
+    List<InlineSpan> firstLineChildren = (_message.distinguished != null)
+        ? [
+            TextSpan(
+                text: ' [${_message.distinguished}]',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+          ]
+        : [];
     try {
       replies = _message.replies.length;
       if (replies > 0) {
-        firstLineChildren = [
+        firstLineChildren.add(
           TextSpan(
               text: '  (${replies.toString()})',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w100)),
-        ];
+        );
       }
     } catch (e) {
       logger.v('no replies to message');
     }
+    var fontWeight = _message.newItem ? FontWeight.bold : FontWeight.normal;
     var titleWidget = Row(children: [
       RichText(
         text: TextSpan(
             text: _message.author,
             style: DefaultTextStyle.of(context)
                 .style
-                .copyWith(fontSize: 16, fontWeight: FontWeight.bold),
+                .copyWith(fontSize: 16, fontWeight: fontWeight),
             children: firstLineChildren),
       ),
       Expanded(
@@ -195,25 +209,26 @@ class MessageTile extends StatelessWidget {
       children: [
         Material(
           child: ListTile(
-            key: ValueKey('message_tile_${_message.id}'),
+              key: ValueKey('message_tile_${_message.id}'),
               leading: avatar,
               title: titleWidget,
-              subtitle: RichText(
-                  text: TextSpan(
-                text: _message.subject,
-                style: DefaultTextStyle.of(context).style,
-              )),
+              subtitle: Text(_message.subject),
               dense: true,
               trailing: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () {
+                  onTap: () async {
+                    bool changed = false;
                     if (Platform.isIOS) {
-                      Navigator.of(context, rootNavigator: true).pushNamed(
-                          TenmokuRouter.messageRoute,
-                          arguments: _message);
+                      changed = await Navigator.of(context, rootNavigator: true)
+                          .pushNamed<bool>(TenmokuRouter.messageRoute,
+                              arguments: _message);
                     } else {
-                      Navigator.pushNamed(context, TenmokuRouter.messageRoute,
+                      changed = await Navigator.pushNamed<bool>(
+                          context, TenmokuRouter.messageRoute,
                           arguments: _message);
+                    } // TODO need to find out how to refresh only certain messages w/o redoing the whole list
+                    if (changed) {
+                      BlocProvider.of<RedditMessagesCubit>(context).refresh();
                     }
                   },
                   child: Icon(
@@ -228,6 +243,7 @@ class MessageTile extends StatelessWidget {
   }
 }
 
+/// Takes up the space of the list and informs people they need to login
 class UnauthenticatedWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

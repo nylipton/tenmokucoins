@@ -84,11 +84,12 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.e(
             'Unable to re-authenticate using stored credentials. Clearing the stored one');
         await prefs.setString(authCodeKey, null);
+        initState() ; // go back and do it again
       }
     }
   }
 
-  /// Instance of RedditWrapper, which may be should be untrusted at first,
+  /// Instance of RedditWrapper, which should be untrusted at first,
   /// then authenticated
   RedditWrapper get redditWrapper => _redditWrapper;
 

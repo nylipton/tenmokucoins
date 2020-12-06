@@ -127,9 +127,9 @@ class TenmokuRouter {
       case messageRoute:
         var message = settings.arguments;
         route = (iOS)
-            ? CupertinoPageRoute(
+            ? CupertinoPageRoute<bool>(
                 fullscreenDialog: true, builder: (_) => MessagePageWidget(message))
-            : MaterialPageRoute(
+            : MaterialPageRoute<bool>(
                 fullscreenDialog: true, builder: (_) => MessagePageWidget(message));
         break;
 
