@@ -14,7 +14,11 @@ class HomePage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<RedditClientCubit>(
-          create: (context) => RedditClientCubit(),
+          create: (context)  {
+            var clientBloc = RedditClientCubit() ;
+            clientBloc.initState() ;
+            return clientBloc ;
+          } ,
         ),
         BlocProvider<SubredditBloc>(create: (context) {
           var bloc = SubredditBloc();

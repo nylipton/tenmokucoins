@@ -29,7 +29,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
   StreamSubscription _sub;
 
   RedditClientCubit() : super(RedditWrapper(null)) {
-    // First, set up a listener for deep link updates. This is necessary for
+    // Set up a listener for deep link updates. This is necessary for
     // being notified when the authenticator has been updated.
     _sub = getUriLinksStream().listen((uri) async {
       logger.d('Got an updated response: $uri');
@@ -40,8 +40,8 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         await _tempReddit.auth.authorize(authCode);
 
         var sharedPrefs = await SharedPreferences.getInstance();
-        await sharedPrefs.setString(
-            authCodeKey, _tempReddit.auth.credentials.toJson());
+        var authCodeJson = _tempReddit.auth.credentials.toJson();
+        await sharedPrefs.setString(authCodeKey, authCodeJson);
 
         emit(RedditWrapper(
             _tempReddit)); // Create a new RedditWrapper to force state update
@@ -49,11 +49,19 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.i('Got no initial link back from the authorization Uri');
       }
     });
+  }
 
-    // Second, set the wrapper to hold an anonymous Reddit instance
-    if (state == null || state.reddit == null) {
-      logger.d('Initializing Reddit instance with anonymous client');
-      Reddit.createUntrustedReadOnlyInstance(
+  /// This should be called after the client cubit is created in order to either
+  /// create an untrusted Reddit client or to restore authentication state.
+  /// However it will not initiate the OAuth flow - that must be done manually by
+  /// calling [authenticate()].
+  void initState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var authCode = prefs.get(authCodeKey);
+    if (authCode == null) {
+      logger.d(
+          'No stored credentials. Initializing Reddit instance with anonymous client');
+      await Reddit.createUntrustedReadOnlyInstance(
         clientId: REDDIT_CLIENT_ID,
         userAgent: userAgentId,
         deviceId: Uuid().v4(),
@@ -61,6 +69,22 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.d('Setting the reddit wrapper to an untrusted user');
         emit(RedditWrapper(r));
       });
+    } else {
+      logger.d('Starting to re-authenticate using the stored credentials');
+      _tempReddit = Reddit.restoreInstalledAuthenticatedInstance(authCode,
+          userAgent: userAgentId,
+          clientId: REDDIT_CLIENT_ID,
+          redirectUri: Uri.parse("tenmokucoins://tenmoku.com"));
+      if (_tempReddit != null && _tempReddit.auth.isValid) {
+        var me = await _tempReddit.user.me;
+        logger.d(
+            'Successfully re-authenticated using stored credentials. User ${me}');
+        emit(RedditWrapper(_tempReddit));
+      } else {
+        logger.e(
+            'Unable to re-authenticate using stored credentials. Clearing the stored one');
+        await prefs.setString(authCodeKey, null);
+      }
     }
   }
 
@@ -81,9 +105,12 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
             clientId: REDDIT_CLIENT_ID,
             userAgent: userAgentId);
 
-        final authUrl = _tempReddit.auth.url(
-            ['read', 'account', 'identity', 'privatemessages'], 'tenmokucoins-auth',
-            compactLogin: true);
+        final authUrl = _tempReddit.auth.url([
+          'read',
+          'account',
+          'identity',
+          'privatemessages'
+        ], 'tenmokucoins-auth', compactLogin: true);
         logger.d("authentication URL is $authUrl");
 
         if (await canLaunch(authUrl.toString())) {
@@ -104,7 +131,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
           clientId: REDDIT_CLIENT_ID,
           redirectUri: Uri.parse("tenmokucoins://tenmoku.com"));
       if (_tempReddit != null && _tempReddit.auth.isValid) {
-        var me = await _tempReddit.user.me ;
+        var me = await _tempReddit.user.me;
         logger.d(
             'Successfully reauthenticated using stored credentials. User ${me}');
         emit(RedditWrapper(_tempReddit));
@@ -112,7 +139,7 @@ class RedditClientCubit extends Cubit<RedditWrapper> {
         logger.e(
             'Unable to reauthenticate using stored credentials. Clearing the stored one');
         await prefs.setString(authCodeKey, null);
-        authenticate() ; // try this again
+        authenticate(); // try this again
       }
     }
   }
